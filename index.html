@@ -342,15 +342,94 @@
     </div>
 
     <!-- Team Dashboard View -->
-    <div class="container view-section no-print" id="teamDashboardView">
-        <h2>📊 สรุปผลงานทีม</h2>
+    <div class="container view-section no-print" id="teamDashboardView" style="max-width: 1050px;">
+        <h2>📊 Dashboard ทีมโดรน</h2>
         <p style="text-align:center; color:var(--text-muted); margin-top:-5px; font-weight:500;" id="dashTeamName">ชื่อทีม</p>
-        <div class="dashboard-grid">
-            <div class="stat-card"><h4>พื้นที่บินรวม (ไร่)</h4><p id="teamTotalArea">0.00</p></div>
-            <div class="stat-card"><h4>จำนวนงานสำเร็จ</h4><p id="teamTotalJobs">0</p></div>
+
+        <h3 style="color: var(--primary-dark); border-bottom: 2px solid #dfead8;">🔎 ตัวกรองรายงานของทีม</h3>
+        <div class="report-filter-panel">
+            <div class="filter-toolbar">
+                <div class="form-group">
+                    <label>วันที่เริ่มต้น:</label>
+                    <input type="date" id="teamDashboardStartDate" onchange="clearTeamDashboardSelectedDate(false); renderTeamDashboard();">
+                </div>
+                <div class="form-group">
+                    <label>วันที่สิ้นสุด:</label>
+                    <input type="date" id="teamDashboardEndDate" onchange="clearTeamDashboardSelectedDate(false); renderTeamDashboard();">
+                </div>
+                <div class="form-group">
+                    <label>สถานะแปลง:</label>
+                    <select id="teamDashboardStatusFilter" onchange="setTeamDashboardStatusFilter(this.value)">
+                        <option value="ALL">ทุกสถานะ</option>
+                        <option value="รอตรวจงาน">รอตรวจงาน</option>
+                        <option value="ผ่าน">ผ่าน</option>
+                        <option value="จ่ายเงินแล้ว">จ่ายเงินแล้ว</option>
+                    </select>
+                </div>
+                <button type="button" class="mini-btn" onclick="clearTeamDashboardFilters()">ล้างตัวกรอง</button>
+            </div>
+            <div class="status-summary-grid" id="teamDashboardStatusSummary"></div>
+            <div class="team-dashboard-note">* ข้อมูลทั้งหมดในหน้านี้เป็นเฉพาะทีมของผู้ใช้งาน และอ้างอิงจาก “วันที่บิน” ที่ทีมรายงาน</div>
         </div>
+
+        <div class="dashboard-grid">
+            <div class="stat-card"><h4>พื้นที่บินรวมตามตัวกรอง (ไร่)</h4><p id="teamTotalArea">0.00</p></div>
+            <div class="stat-card"><h4>จำนวนแปลงตามตัวกรอง</h4><p id="teamTotalJobs">0</p></div>
+            <div class="stat-card"><h4>จำนวนวันที่บิน</h4><p id="teamActiveDays">0</p></div>
+            <div class="stat-card"><h4>เฉลี่ยไร่/วัน</h4><p id="teamAvgPerDay">0.00</p></div>
+        </div>
+
+        <h3 style="color: var(--primary-dark); border-bottom: 2px solid #dfead8;">🚁 สรุปรายวันของทีมโดรน</h3>
+        <div class="team-summary-box">
+            <div class="team-summary-header">
+                <span>กดเลือกวันที่ในตาราง เพื่อดูจำนวนแปลงและรายการแปลงของวันนั้น</span>
+                <span id="teamDashboardDailySummaryText">0 วัน | 0 แปลง | 0.00 ไร่</span>
+            </div>
+            <div style="overflow-x:auto; max-height:360px; overflow-y:auto;">
+                <table class="team-summary-table" id="teamDashboardDailyTable">
+                    <thead>
+                        <tr>
+                            <th>วันที่บิน</th>
+                            <th style="text-align:right;">จำนวนแปลง</th>
+                            <th style="text-align:right;">พื้นที่บินจริง (ไร่)</th>
+                            <th style="text-align:right;">รอตรวจ</th>
+                            <th style="text-align:right;">ผ่าน</th>
+                            <th style="text-align:right;">จ่ายเงินแล้ว</th>
+                            <th>ดูข้อมูล</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <h3 class="team-detail-title">
+            <span>📝 รายการแปลงของทีม</span>
+            <span class="team-detail-chip" id="teamDashboardDetailLabel">ทุกวันที่บิน / ทุกสถานะ</span>
+        </h3>
+        <div style="overflow-x:auto; margin-bottom:25px;">
+            <table id="teamDashboardDetailTable">
+                <thead>
+                    <tr>
+                        <th>วันที่บิน</th>
+                        <th>รหัสแปลง</th>
+                        <th>ชื่อเกษตรกร</th>
+                        <th>พื้นที่(ไร่)</th>
+                        <th>จังหวัด</th>
+                        <th>อำเภอ</th>
+                        <th>สถานะ</th>
+                        <th>จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
         <h3>📍 แผนที่พื้นที่ปฏิบัติงานของทีม</h3>
-        <div id="dashboardMap"></div>
+        <div class="team-map-panel">
+            <div id="dashboardMap"></div>
+            <div class="team-dashboard-note">* หมุดแผนที่จะแสดงเฉพาะรายการที่ตรงกับตัวกรองด้านบน</div>
+        </div>
     </div>
 
     <!-- Form View -->
@@ -698,7 +777,10 @@
             if (btnElement && btnElement.classList) btnElement.classList.add('active');
 
             if (viewId === 'formView' && formMap) setTimeout(() => formMap.invalidateSize(), 200);
-            if (viewId === 'teamDashboardView' && dashMap) setTimeout(() => dashMap.invalidateSize(), 200);
+            if (viewId === 'teamDashboardView') {
+                renderTeamDashboard();
+                if (dashMap) setTimeout(() => dashMap.invalidateSize(), 200);
+            }
             if (viewId === 'adminDashboardView' && adminMap) setTimeout(() => adminMap.invalidateSize(), 200);
             if (viewId === 'historyView') renderHistoryTable();
             
@@ -1495,26 +1577,211 @@
 
         // === Team Dashboard ===
         let dashMap = null, dashMarkers = [];
-        function renderTeamDashboard() {
-            const myReports = allReports.filter(r => r.teamId === currentUser.id);
-            let totalArea = 0; myReports.forEach(r => totalArea += parseFloat(r.actualArea) || 0);
-            document.getElementById('teamTotalArea').innerText = totalArea.toFixed(2); // แก้เป็น 2 ตำแหน่ง
-            document.getElementById('teamTotalJobs').innerText = myReports.length;
+        let teamDashboardSelectedDate = 'ALL';
+        let teamDashboardStatusFilterValue = 'ALL';
 
+        function getMyTeamReports() {
+            if (!currentUser) return [];
+            return allReports.filter(r => {
+                if (r.teamId && currentUser.id) return String(r.teamId) === String(currentUser.id);
+                return r.teamName === currentUser.displayName;
+            });
+        }
+
+        function getTeamDashboardRangeReports() {
+            const startEl = document.getElementById('teamDashboardStartDate');
+            const endEl = document.getElementById('teamDashboardEndDate');
+            const startDate = startEl ? startEl.value : '';
+            const endDate = endEl ? endEl.value : '';
+
+            return getMyTeamReports().filter(r => {
+                const dateKey = getDateKey(r.operationDate);
+                if (startDate && (!dateKey || dateKey < startDate)) return false;
+                if (endDate && (!dateKey || dateKey > endDate)) return false;
+                if (teamDashboardSelectedDate !== 'ALL' && dateKey !== teamDashboardSelectedDate) return false;
+                return true;
+            });
+        }
+
+        function getTeamDashboardFilteredReports() {
+            return getTeamDashboardRangeReports().filter(r => {
+                if (teamDashboardStatusFilterValue !== 'ALL' && getReportStatus(r) !== teamDashboardStatusFilterValue) return false;
+                return true;
+            });
+        }
+
+        function setTeamDashboardStatusFilter(status) {
+            teamDashboardStatusFilterValue = status || 'ALL';
+            const el = document.getElementById('teamDashboardStatusFilter');
+            if (el) el.value = teamDashboardStatusFilterValue;
+            renderTeamDashboard();
+        }
+
+        function setTeamDashboardDateFilter(dateKey) {
+            teamDashboardSelectedDate = teamDashboardSelectedDate === dateKey ? 'ALL' : dateKey;
+            renderTeamDashboard();
+        }
+
+        function clearTeamDashboardSelectedDate(shouldRender = true) {
+            teamDashboardSelectedDate = 'ALL';
+            if (shouldRender) renderTeamDashboard();
+        }
+
+        function clearTeamDashboardFilters() {
+            ['teamDashboardStartDate', 'teamDashboardEndDate'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            teamDashboardSelectedDate = 'ALL';
+            teamDashboardStatusFilterValue = 'ALL';
+            const statusEl = document.getElementById('teamDashboardStatusFilter');
+            if (statusEl) statusEl.value = 'ALL';
+            renderTeamDashboard();
+        }
+
+        function renderTeamDashboardStatusCards(rangeReports) {
+            const box = document.getElementById('teamDashboardStatusSummary');
+            if (!box) return;
+            const totalArea = rangeReports.reduce((sum, r) => sum + (parseFloat(r.actualArea) || 0), 0);
+            const pending = rangeReports.filter(r => getReportStatus(r) === 'รอตรวจงาน');
+            const approved = rangeReports.filter(r => getReportStatus(r) === 'ผ่าน');
+            const paid = rangeReports.filter(r => getReportStatus(r) === 'จ่ายเงินแล้ว');
+            const cards = [
+                { key: 'ALL', cls: 'total', title: 'ทั้งหมด', count: rangeReports.length, area: totalArea, label: 'ดูทุกสถานะ' },
+                { key: 'รอตรวจงาน', cls: 'pending', title: 'รอตรวจงาน', count: pending.length, area: pending.reduce((s, r) => s + (parseFloat(r.actualArea) || 0), 0), label: 'แปลงที่รอการตรวจสอบ' },
+                { key: 'ผ่าน', cls: 'approved', title: 'ผ่าน', count: approved.length, area: approved.reduce((s, r) => s + (parseFloat(r.actualArea) || 0), 0), label: 'แปลงที่ผ่านการตรวจแล้ว' },
+                { key: 'จ่ายเงินแล้ว', cls: 'paid', title: 'จ่ายเงินแล้ว', count: paid.length, area: paid.reduce((s, r) => s + (parseFloat(r.actualArea) || 0), 0), label: 'แปลงที่จ่ายเงินแล้ว' }
+            ];
+            box.innerHTML = cards.map(c => `
+                <div class="status-card ${c.cls} ${teamDashboardStatusFilterValue === c.key ? 'active' : ''}" onclick="setTeamDashboardStatusFilter('${c.key}')">
+                    <span>${c.title}</span>
+                    <strong>${c.count} แปลง</strong>
+                    <small>${c.area.toFixed(2)} ไร่ • ${c.label}</small>
+                </div>
+            `).join('');
+        }
+
+        function getTeamDashboardDailyRows(reports) {
+            const grouped = {};
+            reports.forEach(r => {
+                const dateKey = getDateKey(r.operationDate);
+                if (!dateKey) return;
+                if (!grouped[dateKey]) grouped[dateKey] = { dateKey, jobs: 0, area: 0, pending: 0, approved: 0, paid: 0 };
+                grouped[dateKey].jobs += 1;
+                grouped[dateKey].area += parseFloat(r.actualArea) || 0;
+                const status = getReportStatus(r);
+                if (status === 'รอตรวจงาน') grouped[dateKey].pending += 1;
+                else if (status === 'ผ่าน') grouped[dateKey].approved += 1;
+                else if (status === 'จ่ายเงินแล้ว') grouped[dateKey].paid += 1;
+            });
+            return Object.values(grouped).sort((a, b) => b.dateKey.localeCompare(a.dateKey));
+        }
+
+        function renderTeamDashboardDailyTable(dailyBaseReports) {
+            const tbody = document.querySelector('#teamDashboardDailyTable tbody');
+            const summaryText = document.getElementById('teamDashboardDailySummaryText');
+            if (!tbody) return;
+            const rows = getTeamDashboardDailyRows(dailyBaseReports);
+            const totalArea = dailyBaseReports.reduce((sum, r) => sum + (parseFloat(r.actualArea) || 0), 0);
+            const activeDays = new Set(dailyBaseReports.map(r => getDateKey(r.operationDate)).filter(Boolean)).size;
+            if (summaryText) summaryText.innerText = `${activeDays} วัน | ${dailyBaseReports.length} แปลง | ${totalArea.toFixed(2)} ไร่`;
+
+            if (!rows.length) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:16px;">ไม่พบข้อมูลตามช่วงวันที่หรือสถานะที่เลือก</td></tr>';
+                return;
+            }
+            tbody.innerHTML = rows.map(r => `
+                <tr class="clickable-row ${teamDashboardSelectedDate === r.dateKey ? 'selected-row' : ''}" onclick="setTeamDashboardDateFilter('${r.dateKey}')">
+                    <td><strong>${formatFilterDate(r.dateKey)}</strong></td>
+                    <td style="text-align:right; font-weight:700;">${r.jobs}</td>
+                    <td style="text-align:right; font-weight:700; color:var(--primary-dark);">${r.area.toFixed(2)}</td>
+                    <td style="text-align:right;"><span class="status-pill pending">${r.pending}</span></td>
+                    <td style="text-align:right;"><span class="status-pill approved">${r.approved}</span></td>
+                    <td style="text-align:right;"><span class="status-pill paid">${r.paid}</span></td>
+                    <td><button type="button" class="mini-btn" style="height:34px;" onclick="event.stopPropagation(); setTeamDashboardDateFilter('${r.dateKey}')">ดูรายการ</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function renderTeamDashboardDetailTable(reports) {
+            const tbody = document.querySelector('#teamDashboardDetailTable tbody');
+            const label = document.getElementById('teamDashboardDetailLabel');
+            if (!tbody) return;
+            const dateText = teamDashboardSelectedDate === 'ALL' ? 'ทุกวันที่บิน' : formatFilterDate(teamDashboardSelectedDate);
+            const statusText = teamDashboardStatusFilterValue === 'ALL' ? 'ทุกสถานะ' : teamDashboardStatusFilterValue;
+            if (label) label.innerText = `${dateText} / ${statusText}`;
+
+            const rows = [...reports].sort((a, b) => (getDateKey(b.operationDate) || '').localeCompare(getDateKey(a.operationDate) || ''));
+            if (!rows.length) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:16px;">ไม่พบรายการแปลงตามตัวกรองที่เลือก</td></tr>';
+                return;
+            }
+            tbody.innerHTML = rows.map(r => {
+                const status = getReportStatus(r);
+                const statusClass = status === 'จ่ายเงินแล้ว' ? 'paid' : (status === 'ผ่าน' ? 'approved' : 'pending');
+                const canEdit = status === 'รอตรวจงาน';
+                return `
+                    <tr>
+                        <td>${parseThaiDate(r.operationDate)}</td>
+                        <td>${escapeHTML(r.plotId || '-')}</td>
+                        <td>${escapeHTML(r.farmerName || '-')}</td>
+                        <td style="text-align:right; font-weight:700;">${(parseFloat(r.actualArea) || 0).toFixed(2)}</td>
+                        <td>${escapeHTML(r.province || '-')}</td>
+                        <td>${escapeHTML(r.district || '-')}</td>
+                        <td><span class="status-pill ${statusClass}">${escapeHTML(status)}</span></td>
+                        <td>${canEdit ? `<button onclick="editReport('${r.id}')" class="btn-small">✏️ แก้ไข</button>` : `<span style="color:#94a3b8; font-size:0.82rem;">ล็อกข้อมูลแล้ว</span>`}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderTeamDashboardMap(reports) {
             if (!dashMap) {
                 dashMap = L.map('dashboardMap').setView([14.9, 100.1], 7);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(dashMap);
             }
-            dashMarkers.forEach(m => dashMap.removeLayer(m)); dashMarkers = [];
+            dashMarkers.forEach(m => dashMap.removeLayer(m));
+            dashMarkers = [];
             const bounds = [];
-            myReports.forEach(r => {
-                if(r.lat && r.lng) {
-                    let opDate = parseThaiDate(r.operationDate);
-                    const marker = L.marker([r.lat, r.lng]).bindPopup(`<b>${r.farmerName}</b><br>พื้นที่: ${r.actualArea} ไร่<br>วันที่: ${opDate}<br>สถานะ: ${r.status || 'รอตรวจงาน'}`).addTo(dashMap);
-                    dashMarkers.push(marker); bounds.push([r.lat, r.lng]);
+            reports.forEach(r => {
+                const lat = parseFloat(r.lat);
+                const lng = parseFloat(r.lng);
+                if(!isNaN(lat) && !isNaN(lng)) {
+                    const status = getReportStatus(r);
+                    const statusColor = status === 'จ่ายเงินแล้ว' || status === 'ผ่าน' ? 'green' : 'orange';
+                    const marker = L.marker([lat, lng])
+                        .bindPopup(`<b>${escapeHTML(r.farmerName || '-')}</b><br>วันที่บิน: ${parseThaiDate(r.operationDate)}<br>พื้นที่: ${r.actualArea || 0} ไร่<br>สถานะ: <b style="color:${statusColor}">${escapeHTML(status)}</b>`)
+                        .addTo(dashMap);
+                    dashMarkers.push(marker);
+                    bounds.push([lat, lng]);
                 }
             });
             if(bounds.length > 0) setTimeout(() => dashMap.fitBounds(bounds), 300);
+            else setTimeout(() => dashMap.setView([14.9, 100.1], 7), 200);
+        }
+
+        function renderTeamDashboard() {
+            if (!currentUser || currentUser.role !== 'team') return;
+
+            const rangeReports = getTeamDashboardRangeReports();
+            const filteredReports = getTeamDashboardFilteredReports();
+            const dailyBaseReports = rangeReports.filter(r => {
+                if (teamDashboardStatusFilterValue !== 'ALL' && getReportStatus(r) !== teamDashboardStatusFilterValue) return false;
+                return true;
+            });
+            const perf = getDailyPerformance(filteredReports);
+
+            document.getElementById('teamTotalArea').innerText = perf.totalArea.toFixed(2);
+            document.getElementById('teamTotalJobs').innerText = filteredReports.length;
+            const activeDaysEl = document.getElementById('teamActiveDays');
+            const avgPerDayEl = document.getElementById('teamAvgPerDay');
+            if (activeDaysEl) activeDaysEl.innerText = perf.activeDays;
+            if (avgPerDayEl) avgPerDayEl.innerText = perf.avgAreaPerDay.toFixed(2);
+
+            renderTeamDashboardStatusCards(rangeReports);
+            renderTeamDashboardDailyTable(dailyBaseReports);
+            renderTeamDashboardDetailTable(filteredReports);
+            renderTeamDashboardMap(filteredReports);
         }
 
         // === Form & Submission ===
