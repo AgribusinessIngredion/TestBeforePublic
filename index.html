@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบรายงานการบินโดรน (Drone Report System)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --primary: #27ae60; --primary-hover: #2ecc71; --bg: #f4f7f6;
+            --text: #333; --border: #ccc; --card-bg: #fff;
+            --text-muted: #7f8c8d; --success: #27ae60; --danger: #e74c3c;
+        }
+        body { font-family: 'Sarabun', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 0; line-height: 1.6; }
+        
+        .navbar { background: #2c3e50; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .nav-menu { display: flex; gap: 10px; overflow-x: auto; white-space: nowrap; padding-bottom: 2px; }
+        .nav-btn { background: none; border: 1px solid rgba(255,255,255,0.4); color: white; padding: 8px 16px; border-radius: 20px; cursor: pointer; transition: 0.3s; font-family: 'Sarabun', sans-serif; font-size: 0.95rem; }
+        .nav-btn.active { background: var(--primary); border-color: var(--primary); font-weight: 500; }
+        .nav-btn:hover { background: rgba(255,255,255,0.15); }
+        .nav-logout { background: var(--danger); border-color: var(--danger); }
+        .nav-logout:hover { background: #c0392b; }
+        
+        .container { max-width: 750px; margin: 25px auto; background: var(--card-bg); padding: 25px 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); display: none; }
+        .container.active { display: block; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        h2 { text-align: center; color: #2c3e50; margin-top: 0; margin-bottom: 10px; font-weight: 600; }
+        h3 { color: #2980b9; border-bottom: 2px solid #ecf0f1; padding-bottom: 8px; margin-top: 30px; margin-bottom: 15px; font-size: 1.15rem; font-weight: 500; }
+        
+        .form-group { margin-bottom: 16px; width: 100%; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.95rem; color: #34495e; }
+        
+        /* Form Inputs - Standardized Sizes */
+        input[type="text"], input[type="date"], input[type="time"], input[type="number"], input[type="password"], input[type="month"], select {
+            width: 100%; height: 44px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 4px; 
+            box-sizing: border-box; font-family: 'Sarabun', sans-serif; font-size: 1rem; transition: 0.3s;
+        }
+        input:focus, select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 2px rgba(39, 174, 96, 0.2); }
+        input[type="file"] { padding: 8px 0; width: 100%; font-family: 'Sarabun', sans-serif; }
+        .readonly-field { background-color: #e9ecef; color: #555; cursor: not-allowed; }
+        
+        /* Flex Layouts for side-by-side elements */
+        .flex-row { display: flex; gap: 15px; flex-wrap: wrap; }
+        .flex-row > div { flex: 1; min-width: 180px; }
+        
+        /* Buttons */
+        .btn { display: block; width: 100%; height: 48px; background: var(--primary); color: #fff; border: none; border-radius: 4px; font-size: 1.05rem; font-weight: 600; cursor: pointer; transition: background 0.3s; margin-top: 20px; font-family: 'Sarabun', sans-serif; }
+        .btn:hover { background: var(--primary-hover); }
+        .btn-outline { background: transparent; color: var(--primary); border: 2px solid var(--primary); height: 44px; margin-top: 10px; font-weight: 500;}
+        .btn-outline:hover { background: var(--primary); color: white; }
+        .btn-small { padding: 6px 12px; font-size: 0.85rem; background: #f39c12; width: auto; display: inline-block; color: white; border: none; border-radius: 4px; cursor: pointer;}
+        .btn-small:hover { background: #e67e22; }
+
+        /* Messages */
+        .ui-message { padding: 15px; border-radius: 4px; margin-bottom: 20px; text-align: center; font-weight: 500; display: none; }
+        .ui-message.success { background-color: #e8f8f5; color: #27ae60; border: 1px solid #a3e4d7; }
+        .ui-message.error { background-color: #fdedec; color: #e74c3c; border: 1px solid #f5b7b1; }
+        
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.95rem; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background-color: #f8f9fa; color: #2c3e50; font-weight: 600; white-space: nowrap; }
+        tr:hover { background-color: #fbfcfc; }
+        select.status-dropdown { padding: 4px 8px; border-radius: 4px; font-family: inherit; font-size: 0.9rem; height: auto; border: 1px solid #ccc; cursor: pointer;}
+
+        /* Dashboard */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .stat-card h4 { margin: 0; color: var(--text-muted); font-size: 0.95rem; font-weight: 500; }
+        .stat-card p { margin: 10px 0 0 0; font-size: 2rem; font-weight: 600; color: #2c3e50; }
+
+        /* Maps */
+        #map, #dashboardMap, #adminMap { height: 320px; width: 100%; margin-top: 5px; border-radius: 4px; z-index: 1; border: 1px solid var(--border); }
+        
+        /* Print Styles for PDF Export */
+        @media print {
+            body * { visibility: hidden; }
+            #printSection, #printSection * { visibility: visible; }
+            #printSection { position: absolute; left: 0; top: 0; width: 100%; background: white; padding: 20px;}
+            .no-print { display: none !important; }
+            @page { margin: 1cm; }
+        }
+
+        @media (max-width: 600px) {
+            .navbar { flex-direction: column; gap: 12px; padding: 15px; }
+            .nav-menu { width: 100%; justify-content: flex-start; padding-bottom: 8px; }
+            .container { margin: 15px 10px; padding: 20px 15px; }
+            .flex-row { flex-direction: column; gap: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <div class="navbar no-print" id="mainNav" style="display: none;">
+        <div style="font-weight: 600; font-size: 1.2rem; letter-spacing: 0.5px;">🚁 Drone Services</div>
+        <div class="nav-menu" id="navMenuElements"></div>
+    </div>
+
+    <!-- Login View -->
+    <div class="container view-section active no-print" id="loginView" style="max-width: 420px; margin-top: 8vh;">
+        <h2>เข้าสู่ระบบ</h2>
+        <p style="text-align:center; color:var(--text-muted); margin-bottom:25px; font-size: 0.95rem;">ระบบรายงานการบินโดรน</p>
+        <div class="ui-message error" id="loginError">ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</div>
+        <form id="loginForm">
+            <div class="form-group">
+                <label>ชื่อผู้ใช้ (Username)</label>
+                <input type="text" id="username" placeholder="กรอกชื่อผู้ใช้ของคุณ" required>
+            </div>
+            <div class="form-group">
+                <label>รหัสผ่าน (Password)</label>
+                <input type="password" id="password" placeholder="กรอกรหัสผ่านของคุณ" required>
+            </div>
+            <button type="submit" class="btn">เข้าสู่ระบบ</button>
+        </form>
+    </div>
+
+    <!-- Admin Dashboard View -->
+    <div class="container view-section no-print" id="adminDashboardView" style="max-width: 950px;">
+        <h2>📊 Dashboard (ผู้ดูแลระบบ)</h2>
+        <div class="dashboard-grid">
+            <div class="stat-card"><h4>พื้นที่รวมทุกทีม (ไร่)</h4><p id="adminTotalArea">0.00</p></div>
+            <div class="stat-card"><h4>จำนวนงานทั้งหมด (แปลง)</h4><p id="adminTotalJobs">0</p></div>
+        </div>
+
+        <!-- Section: Export & Summary (NEW) -->
+        <h3 style="color: #8e44ad; border-bottom: 2px solid #d2b4de;">📊 สรุปรายงานและส่งออก (Export CSV/PDF)</h3>
+        <div style="background: #fdfefe; padding: 15px; border-radius: 8px; border: 1px solid #ebdef0; margin-bottom: 25px;">
+            <div class="flex-row">
+                <div class="form-group">
+                    <label>เลือกโซน (จังหวัด):</label>
+                    <select id="exportZone" onchange="calculateExportSummary()"><option value="ALL">-- ทุกโซน --</option></select>
+                </div>
+                <div class="form-group">
+                    <label>เดือนที่ปฏิบัติงาน:</label>
+                    <input type="month" id="exportMonth" onchange="calculateExportSummary()">
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 5px;">
+                <button class="btn btn-outline" style="flex:1; border-color: #27ae60; color: #27ae60;" onclick="exportCSV()">📥 ดาวน์โหลด CSV</button>
+                <button class="btn btn-outline" style="flex:1; border-color: #e74c3c; color: #e74c3c;" onclick="printPDF()">🖨️ พิมพ์ / Save as PDF</button>
+            </div>
+        </div>
+
+        <!-- Section: Top 5 Difference (NEW) -->
+        <h3 style="color: #e67e22; border-bottom: 2px solid #fdebd0;">🚨 5 อันดับแปลงที่มีความคลาดเคลื่อนสูงสุด</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: -10px;">* เปรียบเทียบพื้นที่ตามเอกสารที่เกษตรกรแจ้ง กับพื้นที่ที่บินได้จริง</p>
+        <div style="overflow-x: auto; margin-bottom: 25px;">
+            <table id="topDiffTable">
+                <thead><tr><th>ชื่อเกษตรกร</th><th>จังหวัด</th><th>พท.เอกสาร (ไร่)</th><th>พท.บินจริง (ไร่)</th><th>ความต่าง (%)</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        
+        <h3>📍 แผนที่หมุดแปลงทั้งหมด</h3>
+        <div id="adminMap" style="height: 400px;"></div>
+
+        <h3>📝 รายการรายงาน (อัปเดตสถานะ)</h3>
+        <div style="overflow-x: auto;">
+            <table id="adminAllReportsTable">
+                <thead><tr><th>วันที่บิน</th><th>ทีมงาน</th><th>ชื่อเกษตรกร</th><th>พื้นที่(ไร่)</th><th>สถานะ</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <h3>⏳ ประวัติเข้าสู่ระบบ (Login Logs)</h3>
+        <div style="overflow-x: auto; max-height: 300px; overflow-y: auto;">
+            <table id="adminLogTable">
+                <thead><tr><th>เวลา</th><th>ทีมงาน</th><th>Username</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Team Dashboard View -->
+    <div class="container view-section no-print" id="teamDashboardView">
+        <h2>📊 สรุปผลงานทีม</h2>
+        <p style="text-align:center; color:var(--text-muted); margin-top:-5px; font-weight:500;" id="dashTeamName">ชื่อทีม</p>
+        <div class="dashboard-grid">
+            <div class="stat-card"><h4>พื้นที่บินรวม (ไร่)</h4><p id="teamTotalArea">0.00</p></div>
+            <div class="stat-card"><h4>จำนวนงานสำเร็จ</h4><p id="teamTotalJobs">0</p></div>
+        </div>
+        <h3>📍 แผนที่พื้นที่ปฏิบัติงานของทีม</h3>
+        <div id="dashboardMap"></div>
+    </div>
+
+    <!-- Form View -->
+    <div class="container view-section no-print" id="formView">
+        <h2 id="formTitle">แบบฟอร์มรายงานการบินโดรน</h2>
+        <div class="ui-message success" id="successMessage">บันทึกข้อมูลและรูปภาพสำเร็จ!</div>
+        
+        <form id="reportForm">
+            <input type="hidden" id="reportId" value=""> <!-- สำหรับเก็บ ID เวลาแก้ข้อมูล -->
+            
+            <h3>ส่วนที่ 1: ข้อมูลทีมและเกษตรกร</h3>
+            <div class="form-group">
+                <label>ชื่อทีม / ผู้รายงาน:</label>
+                <input type="text" id="teamName" class="readonly-field" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>ชื่อ-นามสกุล เกษตรกร:</label>
+                <input type="text" id="farmerName" required placeholder="ระบุชื่อ-นามสกุล">
+            </div>
+
+            <div class="flex-row">
+                <div class="form-group">
+                    <label>รหัสแปลง (ถ้ามี):</label>
+                    <input type="text" id="plotId" placeholder="เช่น P-001">
+                </div>
+                <div class="form-group">
+                    <label>ขนาดพื้นที่ตามเอกสาร (ไร่):</label>
+                    <input type="number" id="docArea" step="0.01" required placeholder="จำนวนไร่">
+                </div>
+            </div>
+
+            <div class="flex-row">
+                <div class="form-group">
+                    <label>วันที่ปลูกมันสำปะหลัง:</label>
+                    <input type="date" id="plantingDate" required>
+                </div>
+                <div class="form-group">
+                    <label>สายพันธุ์มันสำปะหลัง:</label>
+                    <select id="variety" required>
+                        <option value="">-- โหลดข้อมูลสายพันธุ์ --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>แผนที่ปักหมุดแปลงพิกัด GPS:</label>
+                <div class="flex-row" style="gap: 10px; margin-bottom: 10px;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <input type="number" step="any" id="lat" placeholder="ละติจูด" required onchange="updateMapFromInput()">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <input type="number" step="any" id="lng" placeholder="ลองจิจูด" required onchange="updateMapFromInput()">
+                    </div>
+                </div>
+                <button type="button" class="btn btn-outline" onclick="getCurrentGPS()">📍 ดึงตำแหน่งปัจจุบัน (จาก GPS มือถือ)</button>
+                <div id="map"></div>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 5px;">* สามารถกรอกพิกัดด้วยมือ หรือคลิกปักหมุดบนแผนที่ ระบบจะหาที่อยู่ให้โดยอัตโนมัติ</p>
+            </div>
+
+            <div class="form-group">
+                <label>สถานที่ตั้ง (จังหวัด อำเภอ ตำบล):</label>
+                <div class="flex-row" style="gap: 10px;">
+                    <div class="form-group" style="margin-bottom:0;"><select id="province" required><option value="">-- จังหวัด --</option></select></div>
+                    <div class="form-group" style="margin-bottom:0;"><select id="district" required disabled><option value="">-- อำเภอ --</option></select></div>
+                    <div class="form-group" style="margin-bottom:0;"><select id="subdistrict" required disabled><option value="">-- ตำบล --</option></select></div>
+                </div>
+            </div>
+
+            <h3>ส่วนที่ 2: ข้อมูลการปฏิบัติงาน</h3>
+            
+            <div class="flex-row">
+                <div class="form-group">
+                    <label>วันที่บิน:</label>
+                    <input type="date" id="operationDate" required>
+                </div>
+                <div class="form-group">
+                    <label>รุ่นโดรนที่ใช้:</label>
+                    <select id="droneModel" required>
+                        <option value="">-- เลือกรุ่น --</option>
+                        <option value="DJI T10">DJI T10</option><option value="DJI T20">DJI T20</option>
+                        <option value="DJI T20P">DJI T20P</option><option value="DJI T25">DJI T25</option>
+                        <option value="DJI T25P">DJI T25P</option><option value="DJI T30">DJI T30</option>
+                        <option value="DJI T50">DJI T50</option><option value="DJI T55">DJI T55</option>
+                        <option value="DJI T70">DJI T70</option><option value="DJI T100">DJI T100</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex-row">
+                <div class="form-group">
+                    <label>เวลาเริ่ม:</label>
+                    <input type="time" id="startTime" required>
+                </div>
+                <div class="form-group">
+                    <label>เวลาสิ้นสุด:</label>
+                    <input type="time" id="endTime" required>
+                </div>
+            </div>
+
+            <div class="flex-row">
+                <div class="form-group">
+                    <label>พื้นที่ที่บินได้จริงจาก App (ไร่):</label>
+                    <input type="number" id="actualArea" step="0.01" required placeholder="ระบุจำนวนไร่">
+                </div>
+                <div class="form-group">
+                    <label>อัตราการพ่นน้ำ (ลิตร/ไร่):</label>
+                    <select id="sprayRate" required>
+                        <option value="1">1 ลิตร/ไร่</option><option value="2">2 ลิตร/ไร่</option>
+                        <option value="3">3 ลิตร/ไร่</option><option value="4" selected>4 ลิตร/ไร่</option>
+                        <option value="5">5 ลิตร/ไร่</option><option value="6">6 ลิตร/ไร่</option>
+                        <option value="7">7 ลิตร/ไร่</option><option value="8">8 ลิตร/ไร่</option>
+                        <option value="9">9 ลิตร/ไร่</option><option value="10">10 ลิตร/ไร่</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>สาร/ปุ๋ยที่ใช้:</label>
+                <select id="fertilizer" required>
+                    <option value="25-7-7" selected>25-7-7 (+สารจับใบ)</option>
+                    <option value="25-5-5">25-5-5 (+สารจับใบ)</option>
+                    <option value="13-0-46">13-0-46 (+สารจับใบ)</option>
+                    <option value="0-0-60">0-0-60 (+สารจับใบ)</option>
+                    <option value="0-0-50">0-0-50 (+สารจับใบ)</option>
+                </select>
+            </div>
+
+            <h3>ส่วนที่ 3: อัปโหลดหลักฐาน</h3>
+            <p style="font-size: 0.9rem; color: #e67e22; margin-top: -10px; display: none; font-weight: 500;" id="editFileWarning">* ในโหมดแก้ไข: ปล่อยว่างไว้ได้เลยหากไม่ต้องการเปลี่ยนรูปภาพเดิม</p>
+            
+            <div class="form-group">
+                <label>1. ภาพถ่ายขณะปฏิบัติงาน (มี Timestamp):</label>
+                <input type="file" id="file1" accept="image/*" required>
+            </div>
+            <div class="form-group">
+                <label>2. ภาพขอบเขตแปลงจาก App (Boundary):</label>
+                <input type="file" id="file2" accept="image/*" required>
+            </div>
+            <div class="form-group">
+                <label>3. ภาพถ่ายเกษตรกรหน้าแปลง:</label>
+                <input type="file" id="file3" accept="image/*" required>
+            </div>
+
+            <button type="submit" class="btn" id="submitBtn">ส่งรายงาน (Submit)</button>
+        </form>
+    </div>
+
+    <!-- History View -->
+    <div class="container view-section no-print" id="historyView">
+        <h2>📋 ประวัติการส่งรายงานของทีม</h2>
+        <div style="overflow-x: auto;">
+            <table id="historyTable">
+                <thead>
+                    <tr><th>วันที่บิน</th><th>ชื่อเกษตรกร</th><th>พื้นที่(ไร่)</th><th>สถานะ</th><th>จัดการ</th></tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ส่วนที่ใช้สำหรับ Print PDF -->
+    <div id="printSection" style="display:none;"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.85); z-index:9999; justify-content:center; align-items:center; flex-direction:column;">
+        <div style="border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite;"></div>
+        <p style="margin-top:15px; font-weight:600; font-size: 1.1rem; color:var(--primary);" id="loadingText">กำลังประมวลผล...</p>
+    </div>
+    <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+
+    <script>
+        // ==============================================================
+        const API_URL = "https://script.google.com/macros/s/AKfycbyzeJM2ASY6-MS5LbFi806ez1FIciyhw-amH68fRVHGxANLBmOh2siAZPhXiC7HG_Jg/exec"; 
+        // ==============================================================
+
+        let currentUser = null;
+        let allReports = [];
+        let loginLogs = [];
+        let thaiGeoData = {};
+        let geocodedLocations = null; 
+
+        // === โหลดรายชื่อจังหวัด และพิกัด ===
+        async function loadGeoData() {
+            try {
+                const responseCSV = await fetch('ThepExcel-Thailand-Tambon.csv');
+                if (responseCSV.ok) {
+                    const csvText = await responseCSV.text();
+                    const lines = csvText.split(/\r?\n/);
+                    const headers = lines[0].split(',');
+                    const provIdx = headers.indexOf('ProvinceThai'), distIdx = headers.indexOf('DistrictThaiShort'), subDistIdx = headers.indexOf('TambonThaiShort');
+
+                    for (let i = 1; i < lines.length; i++) {
+                        const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                        if (row.length <= provIdx) continue;
+                        const prov = row[provIdx].replace(/^"|"$/g, '').trim(), dist = row[distIdx].replace(/^"|"$/g, '').trim(), subDist = row[subDistIdx].replace(/^"|"$/g, '').trim();
+                        if (!prov || !dist || !subDist) continue;
+                        if (!thaiGeoData[prov]) thaiGeoData[prov] = {};
+                        if (!thaiGeoData[prov][dist]) thaiGeoData[prov][dist] = [];
+                        if (!thaiGeoData[prov][dist].includes(subDist)) thaiGeoData[prov][dist].push(subDist);
+                    }
+                }
+            } catch (error) { console.warn("ไม่สามารถโหลดไฟล์ CSV ได้"); }
+            
+            populateProvinceDropdown();
+
+            try {
+                const responseJSON = await fetch('geocoded.json');
+                if (responseJSON.ok) {
+                    geocodedLocations = await responseJSON.json();
+                }
+            } catch (error) { console.warn("ไม่สามารถโหลดไฟล์ geocoded.json ได้"); }
+        }
+
+        function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+            const R = 6371; 
+            const dLat = (lat2 - lat1) * (Math.PI/180);
+            const dLon = (lon2 - lon1) * (Math.PI/180);
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * (Math.PI/180)) * Math.cos(lat2 * (Math.PI/180)) * Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c; 
+        }
+
+        function autoFillAddress(lat, lng) {
+            if (!geocodedLocations) return;
+            let closestKey = null;
+            let minDistance = Infinity;
+
+            for (const [key, coords] of Object.entries(geocodedLocations)) {
+                let d = getDistanceFromLatLonInKm(lat, lng, coords[0], coords[1]);
+                if (d < minDistance) { minDistance = d; closestKey = key; }
+            }
+
+            if (closestKey) {
+                const parts = closestKey.split('|');
+                if (parts.length === 3) setAddressDropdowns(parts[0], parts[1], parts[2]);
+            }
+        }
+
+        function setAddressDropdowns(p, d, s) {
+            provinceSel.value = p;
+            if(provinceSel.value !== p) return; 
+            provinceSel.dispatchEvent(new Event('change')); 
+
+            setTimeout(() => {
+                districtSel.value = d;
+                districtSel.dispatchEvent(new Event('change')); 
+                setTimeout(() => { subdistrictSel.value = s; }, 50); 
+            }, 50); 
+        }
+
+
+        // === UI Functions ===
+        function showLoading(text) { document.getElementById('loadingText').innerText = text; document.getElementById('loadingOverlay').style.display = 'flex'; }
+        function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
+        const fileToBase64 = (file) => new Promise((resolve, reject) => {
+            if(!file) resolve(null);
+            const reader = new FileReader(); reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result); reader.onerror = error => reject(error);
+        });
+
+        // === Login ===
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const u = document.getElementById('username').value, p = document.getElementById('password').value, errorMsg = document.getElementById('loginError');
+            showLoading("กำลังตรวจสอบข้อมูล...");
+            try {
+                const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: "login", username: u, password: p }) });
+                const resData = await response.json();
+                if(resData.status === "success") {
+                    currentUser = resData.user;
+                    errorMsg.style.display = 'none';
+                    await fetchDashboardData(); 
+                    await fetchVarieties(); 
+                    if(currentUser.role === 'admin') await fetchLoginLogs();
+                    setupUserSession();
+                } else { errorMsg.innerText = resData.message; errorMsg.style.display = 'block'; }
+            } catch(err) { errorMsg.innerText = "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้"; errorMsg.style.display = 'block'; }
+            hideLoading();
+        });
+
+        async function fetchDashboardData() {
+            try {
+                const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: "getReports" }) });
+                const resData = await response.json();
+                if(resData.status === "success") allReports = resData.data;
+            } catch(e) { console.error(e); }
+        }
+
+        async function fetchLoginLogs() {
+            try {
+                const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: "getLoginLogs" }) });
+                const resData = await response.json();
+                if(resData.status === "success") loginLogs = resData.data;
+            } catch(e) { console.error(e); }
+        }
+
+        async function fetchVarieties() {
+            try {
+                const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: "getVarieties" }) });
+                const resData = await response.json();
+                if(resData.status === "success") {
+                    const vSel = document.getElementById('variety');
+                    vSel.innerHTML = '<option value="">-- เลือกสายพันธุ์ --</option>';
+                    resData.data.forEach(v => vSel.add(new Option(v, v)));
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        function setupUserSession() {
+            document.getElementById('mainNav').style.display = 'flex';
+            const menu = document.getElementById('navMenuElements');
+            menu.innerHTML = ''; 
+            
+            if (currentUser.role === 'admin') {
+                menu.innerHTML += `<button class="nav-btn active" onclick="switchView('adminDashboardView', this)">Dashboard กลาง</button>`;
+                switchView('adminDashboardView', menu.firstElementChild);
+                renderAdminDashboard();
+            } else {
+                document.getElementById('teamName').value = currentUser.displayName;
+                document.getElementById('dashTeamName').innerText = currentUser.displayName;
+                menu.innerHTML += `
+                    <button class="nav-btn active" onclick="switchView('teamDashboardView', this)">แดชบอร์ด</button>
+                    <button class="nav-btn" onclick="switchView('formView', this)">ส่งรายงาน</button>
+                    <button class="nav-btn" onclick="switchView('historyView', this)">ประวัติ</button>
+                `;
+                switchView('teamDashboardView', menu.firstElementChild);
+                renderTeamDashboard();
+            }
+            menu.innerHTML += `<button class="nav-btn nav-logout" onclick="logout()">ออกจากระบบ</button>`;
+        }
+
+        function logout() {
+            currentUser = null; allReports = []; loginLogs = [];
+            document.getElementById('mainNav').style.display = 'none';
+            document.getElementById('loginForm').reset();
+            switchView('loginView', null);
+        }
+
+        function switchView(viewId, btnElement) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            if(document.getElementById('navMenuElements')) document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(viewId).classList.add('active');
+            if (btnElement && btnElement.classList) btnElement.classList.add('active');
+
+            if (viewId === 'formView' && formMap) setTimeout(() => formMap.invalidateSize(), 200);
+            if (viewId === 'teamDashboardView' && dashMap) setTimeout(() => dashMap.invalidateSize(), 200);
+            if (viewId === 'adminDashboardView' && adminMap) setTimeout(() => adminMap.invalidateSize(), 200);
+            if (viewId === 'historyView') renderHistoryTable();
+            
+            if (viewId !== 'formView' && currentUser && currentUser.role === 'team') resetFormToNew();
+        }
+
+        // === Admin Dashboard & Reports ===
+        let adminMap = null, adminMarkers = [];
+        
+        function renderAdminDashboard() {
+            let totalArea = 0;
+            allReports.forEach(r => totalArea += parseFloat(r.actualArea) || 0);
+            document.getElementById('adminTotalArea').innerText = totalArea.toFixed(2); // แก้เป็น 2 ตำแหน่ง
+            document.getElementById('adminTotalJobs').innerText = allReports.length;
+
+            // อัปเดต Dropdown เลือกโซนสำหรับการ Export
+            const exZone = document.getElementById('exportZone');
+            const currZone = exZone.value;
+            const uniqueZones = [...new Set(allReports.map(r => r.province).filter(Boolean))].sort();
+            exZone.innerHTML = '<option value="ALL">-- ทุกโซน (ทั้งหมด) --</option>';
+            uniqueZones.forEach(z => exZone.add(new Option(z, z)));
+            if ([...exZone.options].some(o => o.value === currZone)) exZone.value = currZone;
+
+            // 1. คำนวณ Top 5 ความคลาดเคลื่อนสูงสุด
+            const diffs = allReports.map(r => {
+                const doc = parseFloat(r.docArea) || 0;
+                const act = parseFloat(r.actualArea) || 0;
+                const diff = Math.abs(act - doc);
+                const perc = doc > 0 ? (diff / doc) * 100 : 0;
+                return { ...r, diffVal: diff, perc: perc, doc: doc, act: act };
+            }).filter(r => r.doc > 0); // คำนวณเฉพาะที่มีตัวเลขพท.เอกสาร
+            
+            // เรียงลำดับจากความต่างเปอร์เซ็นต์มากไปน้อย
+            diffs.sort((a, b) => b.perc - a.perc);
+            const top5 = diffs.slice(0, 5);
+            
+            const topTbody = document.querySelector('#topDiffTable tbody');
+            topTbody.innerHTML = '';
+            top5.forEach(r => {
+                let symbol = r.act > r.doc ? '+' : (r.act < r.doc ? '-' : '');
+                let color = r.act > r.doc ? '#27ae60' : '#e74c3c';
+                topTbody.innerHTML += `<tr>
+                    <td>${r.farmerName}</td>
+                    <td>${r.province || '-'}</td>
+                    <td>${r.doc.toFixed(2)}</td>
+                    <td>${r.act.toFixed(2)}</td>
+                    <td style="color:${color}; font-weight:bold;">${symbol}${r.perc.toFixed(2)}%</td>
+                </tr>`;
+            });
+
+            // 2. แผนที่
+            if (!adminMap) {
+                adminMap = L.map('adminMap').setView([14.9, 100.1], 7);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(adminMap);
+            }
+            adminMarkers.forEach(m => adminMap.removeLayer(m));
+            adminMarkers = [];
+            const bounds = [];
+            allReports.forEach(r => {
+                if(r.lat && r.lng) {
+                    let dotColor = r.status === 'ผ่าน' || r.status === 'จ่ายเงินแล้ว' ? 'green' : 'orange';
+                    const marker = L.marker([r.lat, r.lng])
+                        .bindPopup(`<b>${r.teamName}</b><br>${r.farmerName}<br>พื้นที่: ${r.actualArea} ไร่<br>สถานะ: <b style="color:${dotColor}">${r.status}</b>`)
+                        .addTo(adminMap);
+                    adminMarkers.push(marker);
+                    bounds.push([r.lat, r.lng]);
+                }
+            });
+            if(bounds.length > 0) setTimeout(() => adminMap.fitBounds(bounds), 300);
+
+            // 3. ตารางสถานะ
+            const reportTbody = document.querySelector('#adminAllReportsTable tbody');
+            reportTbody.innerHTML = '';
+            const sortedReports = [...allReports].reverse();
+            sortedReports.forEach(r => {
+                let sWait = r.status==='รอตรวจงาน'?'selected':'';
+                let sPass = r.status==='ผ่าน'?'selected':'';
+                let sPaid = r.status==='จ่ายเงินแล้ว'?'selected':'';
+                let opDate = r.operationDate ? new Date(r.operationDate).toLocaleDateString('th-TH') : '';
+                
+                reportTbody.innerHTML += `
+                    <tr>
+                        <td>${opDate}</td>
+                        <td>${r.teamName}</td>
+                        <td>${r.farmerName} <br><small>(${r.actualArea} ไร่)</small></td>
+                        <td>
+                            <select class="status-dropdown" onchange="updateReportStatus('${r.id}', this.value)" style="border-color: ${sPass||sPaid ? '#27ae60' : '#f39c12'};">
+                                <option value="รอตรวจงาน" ${sWait}>รอตรวจงาน</option>
+                                <option value="ผ่าน" ${sPass}>ผ่าน</option>
+                                <option value="จ่ายเงินแล้ว" ${sPaid}>จ่ายเงินแล้ว</option>
+                            </select>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            // 4. ตาราง Logins
+            const logTbody = document.querySelector('#adminLogTable tbody');
+            logTbody.innerHTML = '';
+            loginLogs.forEach(log => {
+                let d = new Date(log.time);
+                let timeStr = `${d.toLocaleDateString('th-TH')} ${d.toLocaleTimeString('th-TH')}`;
+                logTbody.innerHTML += `<tr><td>${timeStr}</td><td>${log.teamName}</td><td>${log.username}</td></tr>`;
+            });
+
+            calculateExportSummary(); // เตรียมพร้อมข้อมูลสำหรับปริ้นต์
+        }
+
+        async function updateReportStatus(reportId, newStatus) {
+            showLoading("กำลังอัปเดตสถานะ...");
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: "updateStatus", reportId: reportId, status: newStatus })
+                });
+                const res = await response.json();
+                if(res.status === "success") {
+                    const rep = allReports.find(r => r.id.toString() === reportId.toString());
+                    if(rep) rep.status = newStatus;
+                    renderAdminDashboard(); 
+                } else alert("เกิดข้อผิดพลาด: " + res.message);
+            } catch(e) { alert("การเชื่อมต่อล้มเหลว"); }
+            hideLoading();
+        }
+
+        // ==========================================
+        // ฟังก์ชันสำหรับ Export Reports (CSV & PDF)
+        // ==========================================
+        function getFilteredReports() {
+            const zone = document.getElementById('exportZone').value;
+            const month = document.getElementById('exportMonth').value; // format: "YYYY-MM"
+            let filtered = allReports;
+            if (zone !== 'ALL') filtered = filtered.filter(r => r.province === zone);
+            if (month) {
+                filtered = filtered.filter(r => r.operationDate && r.operationDate.startsWith(month));
+            }
+            return filtered;
+        }
+
+        function calculateExportSummary() {
+            const filtered = getFilteredReports();
+            let sumDoc = 0, sumAct = 0;
+            filtered.forEach(r => {
+                sumDoc += parseFloat(r.docArea) || 0;
+                sumAct += parseFloat(r.actualArea) || 0;
+            });
+            const diffPerc = sumDoc > 0 ? ((Math.abs(sumAct - sumDoc) / sumDoc) * 100).toFixed(2) : "0.00";
+            const symbol = sumAct > sumDoc ? '+' : (sumAct < sumDoc ? '-' : '');
+            const color = sumAct > sumDoc ? 'green' : (sumAct < sumDoc ? 'red' : 'black');
+
+            // เตรียมสร้างหน้าต่าง HTML สำหรับ Print/PDF
+            const printSec = document.getElementById('printSection');
+            const zoneText = document.getElementById('exportZone').value === 'ALL' ? 'ทุกโซน (ทั้งหมด)' : document.getElementById('exportZone').value;
+            const monthText = document.getElementById('exportMonth').value || 'ทั้งหมด';
+            
+            let html = `
+                <div style="font-family:'Sarabun', sans-serif;">
+                    <h2 style="text-align:center; color:#2c3e50;">รายงานสรุปผลการปฏิบัติงานบินโดรน</h2>
+                    <p style="text-align:center; font-size:1.1rem; margin-bottom: 20px;">
+                        <strong>โซน (จังหวัด):</strong> ${zoneText} | <strong>เดือนที่ปฏิบัติงาน:</strong> ${monthText}
+                    </p>
+                    
+                    <h3 style="margin-top:20px; border-bottom:1px solid #ccc; padding-bottom:5px;">สรุปผลลัพธ์ภาพรวม</h3>
+                    <table style="width:100%; border-collapse: collapse; margin-bottom:30px;" border="1">
+                        <tr style="background:#f2f2f2; text-align:center;">
+                            <th style="padding:10px;">พื้นที่แจ้งปลูกตามเอกสารรวม</th>
+                            <th style="padding:10px;">พื้นที่ปฏิบัติงานบินจริงรวม</th>
+                            <th style="padding:10px;">ความต่างเฉลี่ย (%)</th>
+                            <th style="padding:10px;">จำนวนงานทั้งหมด</th>
+                        </tr>
+                        <tr>
+                            <td style="padding:10px; text-align:center; font-size:1.1rem;">${sumDoc.toFixed(2)} ไร่</td>
+                            <td style="padding:10px; text-align:center; font-size:1.1rem; font-weight:bold;">${sumAct.toFixed(2)} ไร่</td>
+                            <td style="padding:10px; text-align:center; font-size:1.1rem; color:${color}; font-weight:bold;">${symbol}${diffPerc}%</td>
+                            <td style="padding:10px; text-align:center; font-size:1.1rem;">${filtered.length} แปลง</td>
+                        </tr>
+                    </table>
+
+                    <h3 style="margin-top:20px; border-bottom:1px solid #ccc; padding-bottom:5px;">รายละเอียดการปฏิบัติงานรายแปลง</h3>
+                    <table style="width:100%; border-collapse: collapse;" border="1">
+                        <tr style="background:#f2f2f2;">
+                            <th style="padding:8px;">วันที่บิน</th>
+                            <th style="padding:8px;">ทีมงาน</th>
+                            <th style="padding:8px;">ชื่อเกษตรกร</th>
+                            <th style="padding:8px;">พท.เอกสาร</th>
+                            <th style="padding:8px;">พท.บินจริง</th>
+                            <th style="padding:8px;">ความต่าง(%)</th>
+                            <th style="padding:8px;">สถานะ</th>
+                        </tr>`;
+            
+            filtered.forEach(r => {
+                const doc = parseFloat(r.docArea) || 0;
+                const act = parseFloat(r.actualArea) || 0;
+                const diff = doc > 0 ? ((Math.abs(act - doc) / doc) * 100).toFixed(2) : "0.00";
+                const sym = act > doc ? '+' : (act < doc ? '-' : '');
+                const opDate = r.operationDate ? new Date(r.operationDate).toLocaleDateString('th-TH') : '';
+                html += `
+                        <tr>
+                            <td style="padding:8px;">${opDate}</td>
+                            <td style="padding:8px;">${r.teamName}</td>
+                            <td style="padding:8px;">${r.farmerName}</td>
+                            <td style="padding:8px; text-align:right;">${doc.toFixed(2)}</td>
+                            <td style="padding:8px; text-align:right;">${act.toFixed(2)}</td>
+                            <td style="padding:8px; text-align:right;">${sym}${diff}%</td>
+                            <td style="padding:8px; text-align:center;">${r.status}</td>
+                        </tr>`;
+            });
+            html += `</table>
+                <p style="text-align:right; margin-top:20px; font-size:0.85rem;">พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH')}</p>
+            </div>`;
+            printSec.innerHTML = html;
+        }
+
+        function printPDF() {
+            calculateExportSummary(); // อัปเดตข้อมูลล่าสุดก่อนปริ้นต์
+            window.print(); // สั่งพิมพ์ (ผู้ใช้สามารถเลือก Save as PDF ในเมนูของ Browser ได้เลย)
+        }
+
+        function exportCSV() {
+            const filtered = getFilteredReports();
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; // \uFEFF คือ BOM เพื่อให้ Excel อ่านภาษาไทยได้
+            csvContent += "วันที่บิน,ทีมงาน,ชื่อเกษตรกร,จังหวัด(โซน),พื้นที่เอกสาร(ไร่),พื้นที่บินจริง(ไร่),ความต่าง(%),สถานะ\n";
+
+            filtered.forEach(r => {
+                const doc = parseFloat(r.docArea) || 0;
+                const act = parseFloat(r.actualArea) || 0;
+                const diff = doc > 0 ? ((Math.abs(act - doc) / doc) * 100).toFixed(2) : "0.00";
+                const symbol = act > doc ? '+' : (act < doc ? '-' : '');
+                const opDate = r.operationDate ? new Date(r.operationDate).toLocaleDateString('th-TH') : '';
+                
+                // ใส่ "" ครอบข้อความเพื่อป้องกันปัญหาเครื่องหมาย comma ในข้อความ
+                let row = `"${opDate}","${r.teamName}","${r.farmerName}","${r.province}",${doc.toFixed(2)},${act.toFixed(2)},"${symbol}${diff}%","${r.status}"`;
+                csvContent += row + "\n";
+            });
+
+            const zone = document.getElementById('exportZone').value;
+            const month = document.getElementById('exportMonth').value;
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `DroneReport_${zone}_${month||'ALL'}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        // ==========================================
+
+
+        // === Team Dashboard ===
+        let dashMap = null, dashMarkers = [];
+        function renderTeamDashboard() {
+            const myReports = allReports.filter(r => r.teamId === currentUser.id);
+            let totalArea = 0; myReports.forEach(r => totalArea += parseFloat(r.actualArea) || 0);
+            document.getElementById('teamTotalArea').innerText = totalArea.toFixed(2); // แก้เป็น 2 ตำแหน่ง
+            document.getElementById('teamTotalJobs').innerText = myReports.length;
+
+            if (!dashMap) {
+                dashMap = L.map('dashboardMap').setView([14.9, 100.1], 7);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(dashMap);
+            }
+            dashMarkers.forEach(m => dashMap.removeLayer(m)); dashMarkers = [];
+            const bounds = [];
+            myReports.forEach(r => {
+                if(r.lat && r.lng) {
+                    let opDate = r.operationDate ? new Date(r.operationDate).toLocaleDateString('th-TH') : '';
+                    const marker = L.marker([r.lat, r.lng]).bindPopup(`<b>${r.farmerName}</b><br>พื้นที่: ${r.actualArea} ไร่<br>วันที่: ${opDate}<br>สถานะ: ${r.status || 'รอตรวจงาน'}`).addTo(dashMap);
+                    dashMarkers.push(marker); bounds.push([r.lat, r.lng]);
+                }
+            });
+            if(bounds.length > 0) setTimeout(() => dashMap.fitBounds(bounds), 300);
+        }
+
+        // === Form & Submission ===
+        const provinceSel = document.getElementById('province'), districtSel = document.getElementById('district'), subdistrictSel = document.getElementById('subdistrict');
+        let formMap, formMarker;
+        let isEditingMode = false;
+
+        window.onload = async function() { initFormMap(); await loadGeoData(); };
+
+        function populateProvinceDropdown() {
+            provinceSel.innerHTML = '<option value="">-- จังหวัด --</option>';
+            Object.keys(thaiGeoData).sort().forEach(p => provinceSel.add(new Option(p, p)));
+        }
+        provinceSel.addEventListener('change', function() {
+            districtSel.innerHTML = '<option value="">-- อำเภอ --</option>'; subdistrictSel.innerHTML = '<option value="">-- ตำบล --</option>'; subdistrictSel.disabled = true;
+            if (this.value && thaiGeoData[this.value]) { districtSel.disabled = false; Object.keys(thaiGeoData[this.value]).sort().forEach(d => districtSel.add(new Option(d, d))); } else districtSel.disabled = true;
+        });
+        districtSel.addEventListener('change', function() {
+            subdistrictSel.innerHTML = '<option value="">-- ตำบล --</option>';
+            if (this.value && thaiGeoData[provinceSel.value][this.value]) { subdistrictSel.disabled = false; thaiGeoData[provinceSel.value][this.value].sort().forEach(s => subdistrictSel.add(new Option(s, s))); } else subdistrictSel.disabled = true;
+        });
+
+        function initFormMap() {
+            formMap = L.map('map').setView([14.47, 100.12], 8);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(formMap);
+            formMarker = L.marker([14.47, 100.12]).addTo(formMap);
+            formMap.on('click', function(e) {
+                formMarker.setLatLng(e.latlng);
+                document.getElementById('lat').value = e.latlng.lat.toFixed(6); 
+                document.getElementById('lng').value = e.latlng.lng.toFixed(6);
+                if(!isEditingMode) autoFillAddress(e.latlng.lat, e.latlng.lng); 
+            });
+        }
+
+        function updateMapFromInput() {
+            const lat = parseFloat(document.getElementById('lat').value);
+            const lng = parseFloat(document.getElementById('lng').value);
+            if (!isNaN(lat) && !isNaN(lng)) {
+                formMarker.setLatLng([lat, lng]);
+                formMap.setView([lat, lng], 15);
+                if(!isEditingMode) autoFillAddress(lat, lng); 
+            }
+        }
+
+        function getCurrentGPS() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    p => { 
+                        const lat = p.coords.latitude, lng = p.coords.longitude; 
+                        formMap.setView([lat, lng], 16); 
+                        formMarker.setLatLng([lat, lng]); 
+                        document.getElementById('lat').value = lat.toFixed(6); 
+                        document.getElementById('lng').value = lng.toFixed(6); 
+                        if(!isEditingMode) autoFillAddress(lat, lng); 
+                    },
+                    e => { alert("ไม่สามารถดึง GPS ได้ กรุณาตรวจสอบการอนุญาตการเข้าถึง Location"); }, 
+                    { enableHighAccuracy: true }
+                );
+            }
+        }
+
+        // === แก้ไขรายงาน ===
+        function editReport(id) {
+            const r = allReports.find(rep => rep.id.toString() === id.toString());
+            if(!r) return;
+            
+            isEditingMode = true; 
+            document.getElementById('reportId').value = r.id;
+            document.getElementById('farmerName').value = r.farmerName;
+            document.getElementById('plotId').value = r.plotId;
+            document.getElementById('plantingDate').value = r.plantingDate.split('T')[0];
+            document.getElementById('variety').value = r.variety || ""; 
+            document.getElementById('docArea').value = r.docArea;
+            
+            provinceSel.value = r.province;
+            provinceSel.dispatchEvent(new Event('change'));
+            setTimeout(() => {
+                districtSel.value = r.district;
+                districtSel.dispatchEvent(new Event('change'));
+                setTimeout(() => { subdistrictSel.value = r.subdistrict; }, 50);
+            }, 50);
+
+            document.getElementById('lat').value = r.lat; document.getElementById('lng').value = r.lng;
+            if(r.lat && r.lng) { formMap.setView([r.lat, r.lng], 15); formMarker.setLatLng([r.lat, r.lng]); }
+            
+            document.getElementById('operationDate').value = r.operationDate.split('T')[0];
+            
+            let st = r.startTime, et = r.endTime;
+            if(st && st.includes('T')) st = st.substring(11,16); else if(st && st.length > 5) st = st.substring(0,5);
+            if(et && et.includes('T')) et = et.substring(11,16); else if(et && et.length > 5) et = et.substring(0,5);
+            
+            document.getElementById('startTime').value = st || "";
+            document.getElementById('endTime').value = et || "";
+            document.getElementById('droneModel').value = r.droneModel;
+            document.getElementById('actualArea').value = r.actualArea;
+            document.getElementById('sprayRate').value = r.sprayRate;
+            document.getElementById('fertilizer').value = r.fertilizer;
+
+            document.getElementById('file1').required = false; document.getElementById('file2').required = false; document.getElementById('file3').required = false;
+            document.getElementById('editFileWarning').style.display = 'block';
+            document.getElementById('formTitle').innerText = "✏️ แก้ไขรายงานการบิน";
+            document.getElementById('submitBtn').innerText = "บันทึกการแก้ไข (Update)";
+
+            switchView('formView');
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if(btn.innerText === "ส่งรายงาน") btn.classList.add('active');
+            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetFormToNew() {
+            isEditingMode = false;
+            document.getElementById('reportForm').reset();
+            document.getElementById('reportId').value = "";
+            document.getElementById('teamName').value = currentUser ? currentUser.displayName : "";
+            document.getElementById('lat').value = ''; document.getElementById('lng').value = '';
+            document.getElementById('file1').required = true; document.getElementById('file2').required = true; document.getElementById('file3').required = true;
+            document.getElementById('editFileWarning').style.display = 'none';
+            document.getElementById('formTitle').innerText = "แบบฟอร์มรายงานการบินโดรน";
+            document.getElementById('submitBtn').innerText = "ส่งรายงาน (Submit)";
+        }
+
+        document.getElementById('reportForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if(!document.getElementById('lat').value) { alert("กรุณาปักหมุดพิกัดแปลงบนแผนที่"); return; }
+            showLoading("กำลังส่งข้อมูลเข้าสู่ระบบ...");
+
+            let formData = {
+                id: document.getElementById('reportId').value, 
+                teamId: currentUser.id, teamName: currentUser.displayName,
+                farmerName: document.getElementById('farmerName').value, plotId: document.getElementById('plotId').value,
+                plantingDate: document.getElementById('plantingDate').value, docArea: document.getElementById('docArea').value,
+                variety: document.getElementById('variety').value, 
+                province: document.getElementById('province').value, district: document.getElementById('district').value, subdistrict: document.getElementById('subdistrict').value,
+                lat: document.getElementById('lat').value, lng: document.getElementById('lng').value,
+                operationDate: document.getElementById('operationDate').value, startTime: document.getElementById('startTime').value, endTime: document.getElementById('endTime').value,
+                droneModel: document.getElementById('droneModel').value, actualArea: document.getElementById('actualArea').value, sprayRate: document.getElementById('sprayRate').value, fertilizer: document.getElementById('fertilizer').value,
+            };
+
+            formData.imgTimestampBase64 = await fileToBase64(document.getElementById('file1').files[0]);
+            formData.imgBoundaryBase64 = await fileToBase64(document.getElementById('file2').files[0]);
+            formData.imgFarmerBase64 = await fileToBase64(document.getElementById('file3').files[0]);
+
+            try {
+                const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: "submitReport", data: formData }) });
+                const resData = await response.json();
+                if(resData.status === "success") {
+                    await fetchDashboardData(); 
+                    document.getElementById('successMessage').style.display = 'block';
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    resetFormToNew();
+                    setTimeout(() => document.getElementById('successMessage').style.display = 'none', 3000);
+                } else alert("เกิดข้อผิดพลาด: " + resData.message);
+            } catch(err) { alert("การส่งข้อมูลล้มเหลว กรุณาตรวจสอบอินเทอร์เน็ต"); }
+            hideLoading();
+        });
+
+        // === History ===
+        function renderHistoryTable() {
+            const tbody = document.querySelector('#historyTable tbody');
+            tbody.innerHTML = '';
+            const myReports = [...allReports].filter(r => r.teamId === currentUser.id).reverse(); 
+            if(myReports.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">ยังไม่มีประวัติ</td></tr>'; return; }
+
+            myReports.forEach((r) => {
+                let statusColor = r.status === "จ่ายเงินแล้ว" || r.status === "ผ่าน" ? "color: var(--success); font-weight: bold;" : "color: #f39c12;";
+                let isEditable = r.status === "รอตรวจงาน"; 
+                let opDate = r.operationDate ? new Date(r.operationDate).toLocaleDateString('th-TH') : '';
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${opDate}</td>
+                        <td>${r.farmerName}</td>
+                        <td>${parseFloat(r.actualArea).toFixed(2)}</td>
+                        <td style="${statusColor}">${r.status || 'รอตรวจงาน'}</td>
+                        <td>
+                            ${isEditable ? `<button onclick="editReport('${r.id}')" class="btn-small">✏️ แก้ไข</button>` : `<span style="color:#bdc3c7; font-size:0.8rem;">ล็อกข้อมูลแล้ว</span>`}
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>
