@@ -9,13 +9,24 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         :root {
-            --primary: #27ae60; --primary-hover: #2ecc71; --bg: #f4f7f6;
-            --text: #333; --border: #ccc; --card-bg: #fff;
-            --text-muted: #7f8c8d; --success: #27ae60; --danger: #e74c3c;
+            --primary: #1f7a3a;
+            --primary-dark: #0f4f2a;
+            --primary-hover: #2d9a4a;
+            --accent: #f4a51c;
+            --accent-soft: #fff4d6;
+            --bg: #f3f7f1;
+            --text: #1f2937;
+            --border: #d7e0d5;
+            --card-bg: #fff;
+            --text-muted: #64748b;
+            --success: #15803d;
+            --danger: #dc2626;
+            --warning: #d97706;
+            --info: #0f766e;
         }
-        body { font-family: 'Sarabun', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 0; line-height: 1.6; }
+        body { font-family: 'Sarabun', sans-serif; background: radial-gradient(circle at top left, rgba(244,165,28,0.12), transparent 26%), linear-gradient(180deg, #f7fbf3 0%, var(--bg) 100%); color: var(--text); margin: 0; padding: 0; line-height: 1.6; }
         
-        .navbar { background: #2c3e50; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .navbar { background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 70%, #7aa63a 100%); padding: 13px 22px; display: flex; justify-content: space-between; align-items: center; color: white; box-shadow: 0 8px 24px rgba(15,79,42,0.18); }
         .nav-menu { display: flex; gap: 10px; overflow-x: auto; white-space: nowrap; padding-bottom: 2px; }
         .nav-btn { background: none; border: 1px solid rgba(255,255,255,0.4); color: white; padding: 8px 16px; border-radius: 20px; cursor: pointer; transition: 0.3s; font-family: 'Sarabun', sans-serif; font-size: 0.95rem; }
         .nav-btn.active { background: var(--primary); border-color: var(--primary); font-weight: 500; }
@@ -23,12 +34,12 @@
         .nav-logout { background: var(--danger); border-color: var(--danger); }
         .nav-logout:hover { background: #c0392b; }
         
-        .container { max-width: 750px; margin: 25px auto; background: var(--card-bg); padding: 25px 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); display: none; }
+        .container { max-width: 750px; margin: 25px auto; background: rgba(255,255,255,0.96); padding: 25px 30px; border-radius: 18px; box-shadow: 0 14px 38px rgba(15,79,42,0.10); border: 1px solid rgba(31,122,58,0.08); display: none; }
         .container.active { display: block; animation: fadeIn 0.4s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        h2 { text-align: center; color: #2c3e50; margin-top: 0; margin-bottom: 10px; font-weight: 600; }
-        h3 { color: #2980b9; border-bottom: 2px solid #ecf0f1; padding-bottom: 8px; margin-top: 30px; margin-bottom: 15px; font-size: 1.15rem; font-weight: 500; }
+        h2 { text-align: center; color: var(--primary-dark); margin-top: 0; margin-bottom: 10px; font-weight: 700; letter-spacing: -0.2px; }
+        h3 { color: var(--primary); border-bottom: 2px solid #e6efe1; padding-bottom: 8px; margin-top: 30px; margin-bottom: 15px; font-size: 1.15rem; font-weight: 700; }
         
         .form-group { margin-bottom: 16px; width: 100%; }
         label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.95rem; color: #34495e; }
@@ -38,7 +49,7 @@
             width: 100%; height: 44px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 4px; 
             box-sizing: border-box; font-family: 'Sarabun', sans-serif; font-size: 1rem; transition: 0.3s;
         }
-        input:focus, select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 2px rgba(39, 174, 96, 0.2); }
+        input:focus, select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(31, 122, 58, 0.16); }
         input[type="file"] { padding: 8px 0; width: 100%; font-family: 'Sarabun', sans-serif; }
         .readonly-field { background-color: #e9ecef; color: #555; cursor: not-allowed; }
         
@@ -47,7 +58,7 @@
         .flex-row > div { flex: 1; min-width: 180px; }
         
         /* Buttons */
-        .btn { display: block; width: 100%; height: 48px; background: var(--primary); color: #fff; border: none; border-radius: 4px; font-size: 1.05rem; font-weight: 600; cursor: pointer; transition: background 0.3s; margin-top: 20px; font-family: 'Sarabun', sans-serif; }
+        .btn { display: block; width: 100%; height: 48px; background: linear-gradient(135deg, var(--primary) 0%, #3f9e46 100%); color: #fff; border: none; border-radius: 12px; font-size: 1.05rem; font-weight: 700; cursor: pointer; transition: 0.25s; margin-top: 20px; font-family: 'Sarabun', sans-serif; box-shadow: 0 8px 18px rgba(31,122,58,0.18); }
         .btn:hover { background: var(--primary-hover); }
         .btn-outline { background: transparent; color: var(--primary); border: 2px solid var(--primary); height: 44px; margin-top: 10px; font-weight: 500;}
         .btn-outline:hover { background: var(--primary); color: white; }
@@ -68,20 +79,60 @@
 
         /* Dashboard */
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .stat-card { background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .stat-card { background: linear-gradient(180deg, #ffffff 0%, #f7fbf2 100%); padding: 20px; border-radius: 16px; text-align: center; border: 1px solid rgba(31,122,58,0.13); box-shadow: 0 10px 24px rgba(15,79,42,0.07); position: relative; overflow: hidden; }
+        .stat-card::before { content:''; position:absolute; left:0; top:0; width:100%; height:5px; background: linear-gradient(90deg, var(--primary), var(--accent)); }
         .stat-card h4 { margin: 0; color: var(--text-muted); font-size: 0.95rem; font-weight: 500; }
         .stat-card p { margin: 10px 0 0 0; font-size: 2rem; font-weight: 600; color: #2c3e50; }
 
         /* Maps */
         #map, #dashboardMap, #adminMap { height: 320px; width: 100%; margin-top: 5px; border-radius: 4px; z-index: 1; border: 1px solid var(--border); }
         
+        /* Export / PDF Report */
+        .export-panel {
+            background: linear-gradient(135deg, #ffffff 0%, #f7fbf2 58%, #fff8e6 100%);
+            padding: 20px;
+            border-radius: 18px;
+            border: 1px solid rgba(31,122,58,0.16);
+            margin-bottom: 25px;
+            box-shadow: 0 14px 32px rgba(15,79,42,0.09);
+        }
+        .export-actions { display: flex; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
+        .export-actions .btn { flex: 1; min-width: 180px; margin-top: 0; }
+        .export-preview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; }
+        .export-preview-card { background: #ffffff; border: 1px solid #e5eedf; border-radius: 14px; padding: 13px; box-shadow: 0 6px 18px rgba(15,79,42,0.05); border-top: 4px solid var(--primary); }
+        .export-preview-card span { color: var(--text-muted); font-size: 0.82rem; display: block; }
+        .export-preview-card strong { color: #2c3e50; font-size: 1.15rem; display: block; margin-top: 4px; }
+        .daily-performance-box { margin-top: 14px; border: 1px solid #e5eedf; border-radius: 16px; overflow: hidden; background: #fff; }
+        .daily-performance-title { padding: 10px 14px; background: linear-gradient(90deg, rgba(31,122,58,0.12), rgba(244,165,28,0.16)); color: var(--primary-dark); font-weight: 700; }
+        .daily-performance-table { width: 100%; border-collapse: collapse; margin: 0; font-size: 0.9rem; }
+        .daily-performance-table th { background: #f7fbf2; color: var(--primary-dark); }
+        .daily-performance-table td, .daily-performance-table th { padding: 9px 10px; border-bottom: 1px solid #eef3ea; }
+        .brand-chip { display:inline-flex; align-items:center; gap:8px; background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.22); border-radius:999px; padding:6px 12px; font-weight:700; }
+        .brand-dot { width:12px; height:12px; border-radius:50%; background: var(--accent); box-shadow: 0 0 0 4px rgba(244,165,28,0.18); }
+
+
         /* Print Styles for PDF Export */
         @media print {
+            html, body { background: #fff !important; }
             body * { visibility: hidden; }
             #printSection, #printSection * { visibility: visible; }
-            #printSection { position: absolute; left: 0; top: 0; width: 100%; background: white; padding: 20px;}
+            #printSection {
+                display: block !important;
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white;
+                padding: 0;
+                margin: 0;
+                color: #1f2937;
+            }
             .no-print { display: none !important; }
-            @page { margin: 1cm; }
+            .pdf-page { page-break-after: auto; }
+            .pdf-kpi, .pdf-section, .pdf-signature { break-inside: avoid; page-break-inside: avoid; }
+            .pdf-table tr { break-inside: avoid; page-break-inside: avoid; }
+            .pdf-table thead { display: table-header-group; }
+            @page { size: A4 landscape; margin: 1cm; }
         }
 
         @media (max-width: 600px) {
@@ -96,7 +147,7 @@
 
     <!-- Navigation Bar -->
     <div class="navbar no-print" id="mainNav" style="display: none;">
-        <div style="font-weight: 600; font-size: 1.2rem; letter-spacing: 0.5px;">🚁 Drone Services</div>
+        <div class="brand-chip"><span class="brand-dot"></span>Ingredion Drone Services</div>
         <div class="nav-menu" id="navMenuElements"></div>
     </div>
 
@@ -124,25 +175,57 @@
         <div class="dashboard-grid">
             <div class="stat-card"><h4>พื้นที่รวมทุกทีม (ไร่)</h4><p id="adminTotalArea">0.00</p></div>
             <div class="stat-card"><h4>จำนวนงานทั้งหมด (แปลง)</h4><p id="adminTotalJobs">0</p></div>
+            <div class="stat-card"><h4>จำนวนวันที่มีการบิน</h4><p id="adminActiveDays">0</p></div>
+            <div class="stat-card"><h4>เฉลี่ยไร่/วัน</h4><p id="adminAvgPerDay">0.00</p></div>
         </div>
 
-        <!-- Section: Export & Summary (NEW) -->
-        <h3 style="color: #8e44ad; border-bottom: 2px solid #d2b4de;">📊 สรุปรายงานและส่งออก (Export CSV/PDF)</h3>
-        <div style="background: #fdfefe; padding: 15px; border-radius: 8px; border: 1px solid #ebdef0; margin-bottom: 25px;">
+        <!-- Section: Export & Summary -->
+        <h3 style="color: var(--primary-dark); border-bottom: 2px solid #dfead8;">📊 สรุปรายงานและส่งออกข้อมูล (CSV/PDF)</h3>
+        <div class="export-panel">
+            <div class="flex-row">
+                <div class="form-group">
+                    <label>เลือกชุดข้อมูล Report:</label>
+                    <select id="exportDataset" onchange="calculateExportSummary()">
+                        <option value="ALL">รายงานทั้งหมด</option>
+                        <option value="PENDING">เฉพาะรอตรวจงาน</option>
+                        <option value="APPROVED">เฉพาะผ่านแล้ว</option>
+                        <option value="PAID">เฉพาะจ่ายเงินแล้ว</option>
+                        <option value="VARIANCE_10">เฉพาะแปลงคลาดเคลื่อนเกิน 10%</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>เลือกทีมงาน:</label>
+                    <select id="exportTeam" onchange="calculateExportSummary()"><option value="ALL">-- ทุกทีม --</option></select>
+                </div>
+            </div>
             <div class="flex-row">
                 <div class="form-group">
                     <label>เลือกโซน (จังหวัด):</label>
                     <select id="exportZone" onchange="calculateExportSummary()"><option value="ALL">-- ทุกโซน --</option></select>
                 </div>
                 <div class="form-group">
-                    <label>เดือนที่ปฏิบัติงาน:</label>
-                    <input type="month" id="exportMonth" onchange="calculateExportSummary()">
+                    <label>วันที่เริ่มต้น:</label>
+                    <input type="date" id="exportStartDate" onchange="calculateExportSummary()">
+                </div>
+                <div class="form-group">
+                    <label>วันที่สิ้นสุด:</label>
+                    <input type="date" id="exportEndDate" onchange="calculateExportSummary()">
                 </div>
             </div>
-            <div style="display: flex; gap: 10px; margin-top: 5px;">
-                <button class="btn btn-outline" style="flex:1; border-color: #27ae60; color: #27ae60;" onclick="exportCSV()">📥 ดาวน์โหลด CSV</button>
-                <button class="btn btn-outline" style="flex:1; border-color: #e74c3c; color: #e74c3c;" onclick="printPDF()">🖨️ พิมพ์ / Save as PDF</button>
+            <div class="export-preview-grid" id="exportSummaryPreview">
+                <div class="export-preview-card"><span>จำนวนข้อมูลที่เลือก</span><strong>0 แปลง</strong></div>
+                <div class="export-preview-card"><span>พื้นที่เอกสารรวม</span><strong>0.00 ไร่</strong></div>
+                <div class="export-preview-card"><span>พื้นที่บินจริงรวม</span><strong>0.00 ไร่</strong></div>
+                <div class="export-preview-card"><span>ความต่างรวม</span><strong>0.00%</strong></div>
+                <div class="export-preview-card"><span>จำนวนวันที่บิน</span><strong>0 วัน</strong></div>
+                <div class="export-preview-card"><span>เฉลี่ยประสิทธิภาพ</span><strong>0.00 ไร่/วัน</strong></div>
             </div>
+            <div class="daily-performance-box" id="dailyPerformancePreview" style="display:none;"></div>
+            <div class="export-actions">
+                <button class="btn btn-outline" style="border-color: #27ae60; color: #27ae60;" onclick="exportCSV()">📥 Export CSV ตามชุดข้อมูลที่เลือก</button>
+                <button class="btn btn-outline" style="border-color: #e74c3c; color: #e74c3c;" onclick="printPDF()">🖨️ Export PDF / Print Report</button>
+            </div>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin:12px 0 0;">* ระบบจะ Export เฉพาะข้อมูลที่ตรงกับชุดข้อมูล / ทีม / โซน / ช่วงวันที่ที่เลือก</p>
         </div>
 
         <!-- Section: Top 5 Difference (NEW) -->
@@ -545,16 +628,27 @@
         function renderAdminDashboard() {
             let totalArea = 0;
             allReports.forEach(r => totalArea += parseFloat(r.actualArea) || 0);
+            const allDaily = getDailyPerformance(allReports);
             document.getElementById('adminTotalArea').innerText = totalArea.toFixed(2); // แก้เป็น 2 ตำแหน่ง
             document.getElementById('adminTotalJobs').innerText = allReports.length;
+            document.getElementById('adminActiveDays').innerText = allDaily.activeDays;
+            document.getElementById('adminAvgPerDay').innerText = allDaily.avgAreaPerDay.toFixed(2);
 
-            // อัปเดต Dropdown เลือกโซนสำหรับการ Export
+            // อัปเดต Dropdown สำหรับการ Export
             const exZone = document.getElementById('exportZone');
+            const exTeam = document.getElementById('exportTeam');
             const currZone = exZone.value;
+            const currTeam = exTeam.value;
             const uniqueZones = [...new Set(allReports.map(r => r.province).filter(Boolean))].sort();
+            const uniqueTeams = [...new Set(allReports.map(r => r.teamName).filter(Boolean))].sort();
+
             exZone.innerHTML = '<option value="ALL">-- ทุกโซน (ทั้งหมด) --</option>';
             uniqueZones.forEach(z => exZone.add(new Option(z, z)));
             if ([...exZone.options].some(o => o.value === currZone)) exZone.value = currZone;
+
+            exTeam.innerHTML = '<option value="ALL">-- ทุกทีม --</option>';
+            uniqueTeams.forEach(t => exTeam.add(new Option(t, t)));
+            if ([...exTeam.options].some(o => o.value === currTeam)) exTeam.value = currTeam;
 
             // 1. คำนวณ Top 5 ความคลาดเคลื่อนสูงสุด
             const diffs = allReports.map(r => {
@@ -611,13 +705,14 @@
                 let sWait = r.status==='รอตรวจงาน'?'selected':'';
                 let sPass = r.status==='ผ่าน'?'selected':'';
                 let sPaid = r.status==='จ่ายเงินแล้ว'?'selected':'';
-                let opDate = r.operationDate ? new Date(r.operationDate).toLocaleDateString('th-TH') : '';
+                let opDate = parseThaiDate(r.operationDate);
                 
                 reportTbody.innerHTML += `
                     <tr>
                         <td>${opDate}</td>
-                        <td>${r.teamName}</td>
-                        <td>${r.farmerName} <br><small>(${r.actualArea} ไร่)</small></td>
+                        <td>${escapeHTML(r.teamName)}</td>
+                        <td>${escapeHTML(r.farmerName)}</td>
+                        <td style="text-align:right;">${(parseFloat(r.actualArea) || 0).toFixed(2)}</td>
                         <td>
                             <select class="status-dropdown" onchange="updateReportStatus('${r.id}', this.value)" style="border-color: ${sPass||sPaid ? '#27ae60' : '#f39c12'};">
                                 <option value="รอตรวจงาน" ${sWait}>รอตรวจงาน</option>
@@ -634,7 +729,7 @@
             logTbody.innerHTML = '';
             loginLogs.forEach(log => {
                 let d = new Date(log.time);
-                let timeStr = `${d.toLocaleDateString('th-TH')} ${d.toLocaleTimeString('th-TH')}`;
+                let timeStr = `${d.toLocaleDateString('th-TH', { timeZone: APP_TIME_ZONE })} ${d.toLocaleTimeString('th-TH', { timeZone: APP_TIME_ZONE })}`;
                 logTbody.innerHTML += `<tr><td>${timeStr}</td><td>${log.teamName}</td><td>${log.username}</td></tr>`;
             });
 
@@ -661,122 +756,491 @@
         // ==========================================
         // ฟังก์ชันสำหรับ Export Reports (CSV & PDF)
         // ==========================================
+        const EXPORT_DATASET_LABELS = {
+            ALL: 'รายงานทั้งหมด',
+            PENDING: 'เฉพาะรอตรวจงาน',
+            APPROVED: 'เฉพาะผ่านแล้ว',
+            PAID: 'เฉพาะจ่ายเงินแล้ว',
+            VARIANCE_10: 'เฉพาะแปลงคลาดเคลื่อนเกิน 10%'
+        };
+
+        function escapeHTML(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function csvCell(value) {
+            const text = String(value ?? '').replace(/"/g, '""');
+            return `"${text}"`;
+        }
+
+        const APP_TIME_ZONE = 'Asia/Bangkok';
+
+        function formatBangkokDateKey(date) {
+            if (!(date instanceof Date) || isNaN(date.getTime())) return '';
+            const parts = new Intl.DateTimeFormat('en-CA', {
+                timeZone: APP_TIME_ZONE,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            }).formatToParts(date).reduce((acc, part) => {
+                acc[part.type] = part.value;
+                return acc;
+            }, {});
+            return `${parts.year}-${parts.month}-${parts.day}`;
+        }
+
+        // แปลงวันที่จาก Google Sheet / Apps Script ให้ยึดตามเวลาไทยเสมอ
+        // ป้องกันปัญหา Date object จาก Sheet ถูกส่งเป็น UTC เช่น 2026-06-01 00:00:00 GMT+7
+        // แล้วกลายเป็น 2026-05-31T17:00:00.000Z เมื่อตัดด้วย split('T')[0]
+        function getDateKey(value) {
+            if (!value) return '';
+            if (value instanceof Date) return formatBangkokDateKey(value);
+
+            const text = String(value).trim();
+            if (!text) return '';
+
+            // ค่าจาก input type=date หรือ string วันที่ล้วน ให้ใช้ตรง ๆ เพื่อไม่ให้ timezone เปลี่ยนวัน
+            if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
+
+            // รองรับกรณีข้อความเป็น d/m/yyyy หรือ dd/mm/yyyy จาก Sheet ก่อนใช้ new Date()
+            // เพราะ JavaScript อาจตีความ 1/6/2026 เป็น Jan 6 แทน 1 Jun
+            const slash = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+            if (slash) {
+                const day = slash[1].padStart(2, '0');
+                const month = slash[2].padStart(2, '0');
+                let year = parseInt(slash[3], 10);
+                if (year > 2400) year -= 543;
+                return `${year}-${month}-${day}`;
+            }
+
+            // ISO datetime จาก Apps Script / Google Sheet ให้แปลงกลับเป็นวันที่ตาม Asia/Bangkok ก่อน
+            const isoDate = new Date(text);
+            if (!isNaN(isoDate.getTime())) return formatBangkokDateKey(isoDate);
+
+            return text.substring(0, 10);
+        }
+
+        function formatThaiDate(value) {
+            const key = getDateKey(value);
+            if (!key) return '';
+            const parts = key.split('-').map(Number);
+            if (parts.length !== 3 || parts.some(isNaN)) return String(value ?? '');
+            const [year, month, day] = parts;
+            return `${day}/${month}/${year + 543}`;
+        }
+
+        function parseThaiDate(value) {
+            return formatThaiDate(value);
+        }
+
+        function getAreaDiff(report) {
+            const doc = parseFloat(report.docArea) || 0;
+            const act = parseFloat(report.actualArea) || 0;
+            const diffRai = act - doc;
+            const diffPercent = doc > 0 ? (Math.abs(diffRai) / doc) * 100 : 0;
+            const symbol = diffRai > 0 ? '+' : (diffRai < 0 ? '-' : '');
+            return { doc, act, diffRai, diffPercent, symbol };
+        }
+
+        function formatFilterDate(value) {
+            if (!value) return 'ไม่ระบุ';
+            if (value === 'เริ่มต้น' || value === 'ปัจจุบัน') return value;
+            return formatThaiDate(value) || value;
+        }
+
+        function getDailyPerformance(reports) {
+            const grouped = {};
+            reports.forEach(r => {
+                const key = getDateKey(r.operationDate);
+                if (!key) return;
+                if (!grouped[key]) grouped[key] = { dateKey: key, area: 0, jobs: 0, teams: new Set(), provinces: new Set() };
+                grouped[key].area += parseFloat(r.actualArea) || 0;
+                grouped[key].jobs += 1;
+                if (r.teamName) grouped[key].teams.add(r.teamName);
+                if (r.province) grouped[key].provinces.add(r.province);
+            });
+
+            const days = Object.values(grouped)
+                .sort((a, b) => a.dateKey.localeCompare(b.dateKey))
+                .map(d => ({
+                    dateKey: d.dateKey,
+                    dateText: formatFilterDate(d.dateKey),
+                    area: d.area,
+                    jobs: d.jobs,
+                    teamCount: d.teams.size,
+                    provinceCount: d.provinces.size,
+                    teamsText: [...d.teams].join(', ') || '-',
+                    provincesText: [...d.provinces].join(', ') || '-'
+                }));
+
+            const totalArea = days.reduce((sum, d) => sum + d.area, 0);
+            const totalJobs = days.reduce((sum, d) => sum + d.jobs, 0);
+            const activeDays = days.length;
+            const avgAreaPerDay = activeDays ? totalArea / activeDays : 0;
+            const bestDay = days.length ? days.reduce((best, d) => d.area > best.area ? d : best, days[0]) : null;
+
+            return { days, totalArea, totalJobs, activeDays, avgAreaPerDay, bestDay };
+        }
+
         function getFilteredReports() {
             const zone = document.getElementById('exportZone').value;
-            const month = document.getElementById('exportMonth').value; // format: "YYYY-MM"
-            let filtered = allReports;
+            const team = document.getElementById('exportTeam').value;
+            const startDate = document.getElementById('exportStartDate').value;
+            const endDate = document.getElementById('exportEndDate').value;
+            const dataset = document.getElementById('exportDataset').value;
+
+            let filtered = [...allReports];
             if (zone !== 'ALL') filtered = filtered.filter(r => r.province === zone);
-            if (month) {
-                filtered = filtered.filter(r => r.operationDate && r.operationDate.startsWith(month));
-            }
+            if (team !== 'ALL') filtered = filtered.filter(r => r.teamName === team);
+            if (startDate) filtered = filtered.filter(r => getDateKey(r.operationDate) && getDateKey(r.operationDate) >= startDate);
+            if (endDate) filtered = filtered.filter(r => getDateKey(r.operationDate) && getDateKey(r.operationDate) <= endDate);
+
+            if (dataset === 'PENDING') filtered = filtered.filter(r => (r.status || 'รอตรวจงาน') === 'รอตรวจงาน');
+            if (dataset === 'APPROVED') filtered = filtered.filter(r => r.status === 'ผ่าน');
+            if (dataset === 'PAID') filtered = filtered.filter(r => r.status === 'จ่ายเงินแล้ว');
+            if (dataset === 'VARIANCE_10') filtered = filtered.filter(r => getAreaDiff(r).diffPercent > 10);
+
             return filtered;
+        }
+
+        function getExportMeta() {
+            const dataset = document.getElementById('exportDataset').value;
+            const zone = document.getElementById('exportZone').value;
+            const team = document.getElementById('exportTeam').value;
+            const startDate = document.getElementById('exportStartDate').value;
+            const endDate = document.getElementById('exportEndDate').value;
+            const rangeText = startDate || endDate
+                ? `${formatFilterDate(startDate || 'เริ่มต้น')} - ${formatFilterDate(endDate || 'ปัจจุบัน')}`
+                : 'ทั้งหมด';
+            return {
+                dataset,
+                datasetText: EXPORT_DATASET_LABELS[dataset] || 'รายงานทั้งหมด',
+                zoneText: zone === 'ALL' ? 'ทุกโซน (ทั้งหมด)' : zone,
+                teamText: team === 'ALL' ? 'ทุกทีม' : team,
+                startDateText: startDate ? formatFilterDate(startDate) : 'ไม่ระบุ',
+                endDateText: endDate ? formatFilterDate(endDate) : 'ไม่ระบุ',
+                rangeText,
+                fileZone: zone === 'ALL' ? 'ALL_ZONE' : zone,
+                fileTeam: team === 'ALL' ? 'ALL_TEAM' : team,
+                fileDateRange: `${startDate || 'START'}_${endDate || 'END'}`
+            };
         }
 
         function calculateExportSummary() {
             const filtered = getFilteredReports();
+            const meta = getExportMeta();
             let sumDoc = 0, sumAct = 0;
+            const statusCount = { 'รอตรวจงาน': 0, 'ผ่าน': 0, 'จ่ายเงินแล้ว': 0, 'อื่น ๆ': 0 };
+
             filtered.forEach(r => {
                 sumDoc += parseFloat(r.docArea) || 0;
                 sumAct += parseFloat(r.actualArea) || 0;
+                const status = r.status || 'รอตรวจงาน';
+                if (statusCount[status] === undefined) statusCount['อื่น ๆ'] += 1;
+                else statusCount[status] += 1;
             });
-            const diffPerc = sumDoc > 0 ? ((Math.abs(sumAct - sumDoc) / sumDoc) * 100).toFixed(2) : "0.00";
-            const symbol = sumAct > sumDoc ? '+' : (sumAct < sumDoc ? '-' : '');
-            const color = sumAct > sumDoc ? 'green' : (sumAct < sumDoc ? 'red' : 'black');
 
-            // เตรียมสร้างหน้าต่าง HTML สำหรับ Print/PDF
+            const daily = getDailyPerformance(filtered);
+            const diffRai = sumAct - sumDoc;
+            const diffPerc = sumDoc > 0 ? ((Math.abs(diffRai) / sumDoc) * 100).toFixed(2) : '0.00';
+            const symbol = diffRai > 0 ? '+' : (diffRai < 0 ? '-' : '');
+            const diffColor = diffRai > 0 ? '#15803d' : (diffRai < 0 ? '#b91c1c' : '#374151');
+            const bestDayText = daily.bestDay ? `${daily.bestDay.area.toFixed(2)} ไร่ (${daily.bestDay.dateText})` : '0.00 ไร่';
+
+            const preview = document.getElementById('exportSummaryPreview');
+            if (preview) {
+                preview.innerHTML = `
+                    <div class="export-preview-card"><span>จำนวนข้อมูลที่เลือก</span><strong>${filtered.length} แปลง</strong></div>
+                    <div class="export-preview-card"><span>พื้นที่เอกสารรวม</span><strong>${sumDoc.toFixed(2)} ไร่</strong></div>
+                    <div class="export-preview-card"><span>พื้นที่บินจริงรวม</span><strong>${sumAct.toFixed(2)} ไร่</strong></div>
+                    <div class="export-preview-card"><span>ความต่างรวม</span><strong style="color:${diffColor};">${symbol}${diffPerc}%</strong></div>
+                    <div class="export-preview-card"><span>จำนวนวันที่บิน</span><strong>${daily.activeDays} วัน</strong></div>
+                    <div class="export-preview-card"><span>เฉลี่ยประสิทธิภาพ</span><strong>${daily.avgAreaPerDay.toFixed(2)} ไร่/วัน</strong></div>
+                    <div class="export-preview-card"><span>วันที่ทำได้สูงสุด</span><strong>${bestDayText}</strong></div>
+                `;
+            }
+
+            const dailyPreview = document.getElementById('dailyPerformancePreview');
+            if (dailyPreview) {
+                if (daily.days.length) {
+                    const previewRows = daily.days.slice(-7).map(d => `
+                        <tr>
+                            <td>${d.dateText}</td>
+                            <td style="text-align:right;">${d.jobs}</td>
+                            <td style="text-align:right; font-weight:700; color:var(--primary-dark);">${d.area.toFixed(2)}</td>
+                            <td style="text-align:right;">${d.teamCount}</td>
+                        </tr>`).join('');
+                    dailyPreview.style.display = 'block';
+                    dailyPreview.innerHTML = `
+                        <div class="daily-performance-title">📈 ประสิทธิภาพการบินรายวัน — แสดงล่าสุด ${Math.min(7, daily.days.length)} วัน</div>
+                        <div style="overflow-x:auto;">
+                            <table class="daily-performance-table">
+                                <thead><tr><th>วันที่บิน</th><th style="text-align:right;">จำนวนงาน</th><th style="text-align:right;">ไร่/วัน</th><th style="text-align:right;">จำนวนทีม</th></tr></thead>
+                                <tbody>${previewRows}</tbody>
+                            </table>
+                        </div>`;
+                } else {
+                    dailyPreview.style.display = 'none';
+                    dailyPreview.innerHTML = '';
+                }
+            }
+
+            const topVariance = filtered
+                .map(r => ({ ...r, ...getAreaDiff(r) }))
+                .filter(r => r.doc > 0)
+                .sort((a, b) => b.diffPercent - a.diffPercent)
+                .slice(0, 5);
+
+            const topVarianceRows = topVariance.length ? topVariance.map((r, index) => `
+                <tr>
+                    <td class="center">${index + 1}</td>
+                    <td>${escapeHTML(r.farmerName)}</td>
+                    <td>${escapeHTML(r.province || '-')}</td>
+                    <td class="right">${r.doc.toFixed(2)}</td>
+                    <td class="right">${r.act.toFixed(2)}</td>
+                    <td class="right" style="color:${r.diffRai >= 0 ? '#15803d' : '#b91c1c'}; font-weight:700;">${r.symbol}${r.diffPercent.toFixed(2)}%</td>
+                </tr>
+            `).join('') : `<tr><td colspan="6" class="center muted">ไม่พบข้อมูลความคลาดเคลื่อนในชุดข้อมูลที่เลือก</td></tr>`;
+
+            const dailyRows = daily.days.length ? daily.days.map((d, index) => `
+                <tr>
+                    <td class="center">${index + 1}</td>
+                    <td>${d.dateText}</td>
+                    <td class="right">${d.jobs}</td>
+                    <td class="right" style="font-weight:700; color:#14532d;">${d.area.toFixed(2)}</td>
+                    <td class="right">${d.teamCount}</td>
+                    <td>${escapeHTML(d.provincesText)}</td>
+                </tr>
+            `).join('') : `<tr><td colspan="6" class="center muted">ไม่พบข้อมูลรายวันในช่วงวันที่ที่เลือก</td></tr>`;
+
+            const detailRows = filtered.length ? filtered.map((r, index) => {
+                const area = getAreaDiff(r);
+                return `
+                    <tr>
+                        <td class="center">${index + 1}</td>
+                        <td>${parseThaiDate(r.operationDate)}</td>
+                        <td>${escapeHTML(r.teamName)}</td>
+                        <td>${escapeHTML(r.farmerName)}</td>
+                        <td>${escapeHTML(r.province || '-')}</td>
+                        <td class="right">${area.doc.toFixed(2)}</td>
+                        <td class="right">${area.act.toFixed(2)}</td>
+                        <td class="right">${area.symbol}${area.diffPercent.toFixed(2)}%</td>
+                        <td class="center">${escapeHTML(r.status || 'รอตรวจงาน')}</td>
+                    </tr>
+                `;
+            }).join('') : `<tr><td colspan="9" class="center muted">ไม่พบข้อมูลตามเงื่อนไขที่เลือก</td></tr>`;
+
             const printSec = document.getElementById('printSection');
-            const zoneText = document.getElementById('exportZone').value === 'ALL' ? 'ทุกโซน (ทั้งหมด)' : document.getElementById('exportZone').value;
-            const monthText = document.getElementById('exportMonth').value || 'ทั้งหมด';
-            
-            let html = `
-                <div style="font-family:'Sarabun', sans-serif;">
-                    <h2 style="text-align:center; color:#2c3e50;">รายงานสรุปผลการปฏิบัติงานบินโดรน</h2>
-                    <p style="text-align:center; font-size:1.1rem; margin-bottom: 20px;">
-                        <strong>โซน (จังหวัด):</strong> ${zoneText} | <strong>เดือนที่ปฏิบัติงาน:</strong> ${monthText}
-                    </p>
-                    
-                    <h3 style="margin-top:20px; border-bottom:1px solid #ccc; padding-bottom:5px;">สรุปผลลัพธ์ภาพรวม</h3>
-                    <table style="width:100%; border-collapse: collapse; margin-bottom:30px;" border="1">
-                        <tr style="background:#f2f2f2; text-align:center;">
-                            <th style="padding:10px;">พื้นที่แจ้งปลูกตามเอกสารรวม</th>
-                            <th style="padding:10px;">พื้นที่ปฏิบัติงานบินจริงรวม</th>
-                            <th style="padding:10px;">ความต่างเฉลี่ย (%)</th>
-                            <th style="padding:10px;">จำนวนงานทั้งหมด</th>
-                        </tr>
-                        <tr>
-                            <td style="padding:10px; text-align:center; font-size:1.1rem;">${sumDoc.toFixed(2)} ไร่</td>
-                            <td style="padding:10px; text-align:center; font-size:1.1rem; font-weight:bold;">${sumAct.toFixed(2)} ไร่</td>
-                            <td style="padding:10px; text-align:center; font-size:1.1rem; color:${color}; font-weight:bold;">${symbol}${diffPerc}%</td>
-                            <td style="padding:10px; text-align:center; font-size:1.1rem;">${filtered.length} แปลง</td>
-                        </tr>
-                    </table>
+            const html = `
+                <div class="pdf-page" style="font-family:'Sarabun', sans-serif; color:#1f2937;">
+                    <style>
+                        .pdf-wrap { max-width: 1100px; margin: 0 auto; }
+                        .pdf-header { background: linear-gradient(135deg, #0f4f2a 0%, #1f7a3a 58%, #f4a51c 100%); color: white; padding: 25px 28px; border-radius: 20px; margin-bottom: 18px; box-shadow: 0 14px 32px rgba(15,79,42,0.18); }
+                        .pdf-header-top { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+                        .pdf-brand { font-size: 0.95rem; opacity: 0.98; letter-spacing: 0.4px; font-weight: 700; text-transform: uppercase; }
+                        .pdf-title { font-size: 1.76rem; font-weight: 800; margin: 6px 0 4px; letter-spacing: -0.2px; }
+                        .pdf-subtitle { font-size: 0.98rem; opacity: 0.95; }
+                        .pdf-badge { background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.35); border-radius: 999px; padding: 8px 14px; white-space: nowrap; font-weight:700; }
+                        .pdf-filter { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 16px; }
+                        .pdf-filter div { background: rgba(255,255,255,0.13); border-radius: 13px; padding: 10px 12px; border:1px solid rgba(255,255,255,0.12); }
+                        .pdf-filter small { display: block; opacity: 0.75; margin-bottom: 3px; }
+                        .pdf-filter strong { font-size: 0.92rem; }
+                        .pdf-kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+                        .pdf-kpi { border: 1px solid #e5e7eb; border-top: 5px solid #1f7a3a; border-radius: 17px; padding: 14px; background: #ffffff; box-shadow: 0 8px 20px rgba(31,41,55,0.06); }
+                        .pdf-kpi.accent { border-top-color: #f4a51c; }
+                        .pdf-kpi.teal { border-top-color: #0f766e; }
+                        .pdf-kpi small { display: block; color: #64748b; font-size: 0.82rem; }
+                        .pdf-kpi strong { display: block; margin-top: 5px; font-size: 1.35rem; color: #111827; }
+                        .pdf-section { margin-top: 18px; border: 1px solid #e5e7eb; border-radius: 16px; overflow: hidden; background: #ffffff; }
+                        .pdf-section-title { background: linear-gradient(90deg, #f7fbf2 0%, #fff7e6 100%); border-bottom: 1px solid #e5e7eb; padding: 12px 16px; font-weight: 800; color: #0f4f2a; }
+                        .pdf-section-body { padding: 14px 16px; }
+                        .status-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+                        .status-item { border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px; background: #f9fafb; }
+                        .status-item small { color: #64748b; display:block; }
+                        .status-item strong { font-size: 1.15rem; }
+                        .pdf-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+                        .pdf-table th { background: #0f4f2a; color: white; padding: 8px 7px; text-align: left; font-weight: 700; }
+                        .pdf-table td { border-bottom: 1px solid #e5e7eb; padding: 7px; vertical-align: top; }
+                        .pdf-table tbody tr:nth-child(even) { background: #f8fafc; }
+                        .right { text-align: right !important; }
+                        .center { text-align: center !important; }
+                        .muted { color: #64748b; }
+                        .pdf-footer { margin-top: 18px; color: #64748b; font-size: 0.78rem; text-align: right; }
+                        .pdf-signature { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 28px; }
+                        .pdf-signature div { border-top: 1px solid #9ca3af; text-align: center; padding-top: 8px; color: #4b5563; font-size: 0.84rem; }
+                    </style>
+                    <div class="pdf-wrap">
+                        <div class="pdf-header">
+                            <div class="pdf-header-top">
+                                <div>
+                                    <div class="pdf-brand">Ingredion Agribusiness • Drone Services Report System</div>
+                                    <div class="pdf-title">รายงานสรุปผลการปฏิบัติงานบินโดรน</div>
+                                    <div class="pdf-subtitle">สรุปพื้นที่ปฏิบัติงาน เปรียบเทียบพื้นที่เอกสาร สถานะงาน และประสิทธิภาพการบินต่อวัน</div>
+                                </div>
+                                <div class="pdf-badge">Official Report</div>
+                            </div>
+                            <div class="pdf-filter">
+                                <div><small>ชุดข้อมูล</small><strong>${escapeHTML(meta.datasetText)}</strong></div>
+                                <div><small>ทีมงาน</small><strong>${escapeHTML(meta.teamText)}</strong></div>
+                                <div><small>โซน/จังหวัด</small><strong>${escapeHTML(meta.zoneText)}</strong></div>
+                                <div><small>ช่วงวันที่</small><strong>${escapeHTML(meta.rangeText)}</strong></div>
+                                <div><small>วันที่ออกรายงาน</small><strong>${new Date().toLocaleDateString('th-TH', { timeZone: APP_TIME_ZONE })}</strong></div>
+                            </div>
+                        </div>
 
-                    <h3 style="margin-top:20px; border-bottom:1px solid #ccc; padding-bottom:5px;">รายละเอียดการปฏิบัติงานรายแปลง</h3>
-                    <table style="width:100%; border-collapse: collapse;" border="1">
-                        <tr style="background:#f2f2f2;">
-                            <th style="padding:8px;">วันที่บิน</th>
-                            <th style="padding:8px;">ทีมงาน</th>
-                            <th style="padding:8px;">ชื่อเกษตรกร</th>
-                            <th style="padding:8px;">พท.เอกสาร</th>
-                            <th style="padding:8px;">พท.บินจริง</th>
-                            <th style="padding:8px;">ความต่าง(%)</th>
-                            <th style="padding:8px;">สถานะ</th>
-                        </tr>`;
-            
-            filtered.forEach(r => {
-                const doc = parseFloat(r.docArea) || 0;
-                const act = parseFloat(r.actualArea) || 0;
-                const diff = doc > 0 ? ((Math.abs(act - doc) / doc) * 100).toFixed(2) : "0.00";
-                const sym = act > doc ? '+' : (act < doc ? '-' : '');
-                const opDate = r.operationDate ? new Date(r.operationDate).toLocaleDateString('th-TH') : '';
-                html += `
-                        <tr>
-                            <td style="padding:8px;">${opDate}</td>
-                            <td style="padding:8px;">${r.teamName}</td>
-                            <td style="padding:8px;">${r.farmerName}</td>
-                            <td style="padding:8px; text-align:right;">${doc.toFixed(2)}</td>
-                            <td style="padding:8px; text-align:right;">${act.toFixed(2)}</td>
-                            <td style="padding:8px; text-align:right;">${sym}${diff}%</td>
-                            <td style="padding:8px; text-align:center;">${r.status}</td>
-                        </tr>`;
-            });
-            html += `</table>
-                <p style="text-align:right; margin-top:20px; font-size:0.85rem;">พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH')}</p>
-            </div>`;
+                        <div class="pdf-kpi-grid">
+                            <div class="pdf-kpi"><small>จำนวนรายงาน</small><strong>${filtered.length}</strong><span class="muted">แปลง</span></div>
+                            <div class="pdf-kpi"><small>พื้นที่ตามเอกสารรวม</small><strong>${sumDoc.toFixed(2)}</strong><span class="muted">ไร่</span></div>
+                            <div class="pdf-kpi accent"><small>พื้นที่บินจริงรวม</small><strong>${sumAct.toFixed(2)}</strong><span class="muted">ไร่</span></div>
+                            <div class="pdf-kpi"><small>ความต่างรวม</small><strong style="color:${diffColor};">${symbol}${diffPerc}%</strong><span class="muted">${diffRai.toFixed(2)} ไร่</span></div>
+                            <div class="pdf-kpi teal"><small>จำนวนวันที่มีการบิน</small><strong>${daily.activeDays}</strong><span class="muted">วัน</span></div>
+                            <div class="pdf-kpi teal"><small>เฉลี่ยประสิทธิภาพ</small><strong>${daily.avgAreaPerDay.toFixed(2)}</strong><span class="muted">ไร่/วัน</span></div>
+                            <div class="pdf-kpi accent"><small>วันที่ทำได้สูงสุด</small><strong>${daily.bestDay ? daily.bestDay.area.toFixed(2) : '0.00'}</strong><span class="muted">${daily.bestDay ? daily.bestDay.dateText : 'ไร่'}</span></div>
+                            <div class="pdf-kpi"><small>งานเฉลี่ยต่อวัน</small><strong>${daily.activeDays ? (daily.totalJobs / daily.activeDays).toFixed(1) : '0.0'}</strong><span class="muted">แปลง/วัน</span></div>
+                        </div>
+
+                        <div class="pdf-section">
+                            <div class="pdf-section-title">สรุปสถานะงาน</div>
+                            <div class="pdf-section-body status-grid">
+                                <div class="status-item"><small>รอตรวจงาน</small><strong>${statusCount['รอตรวจงาน']}</strong></div>
+                                <div class="status-item"><small>ผ่าน</small><strong>${statusCount['ผ่าน']}</strong></div>
+                                <div class="status-item"><small>จ่ายเงินแล้ว</small><strong>${statusCount['จ่ายเงินแล้ว']}</strong></div>
+                                <div class="status-item"><small>อื่น ๆ</small><strong>${statusCount['อื่น ๆ']}</strong></div>
+                            </div>
+                        </div>
+
+                        <div class="pdf-section">
+                            <div class="pdf-section-title">ประสิทธิภาพการบินรายวัน (ไร่/วัน)</div>
+                            <div class="pdf-section-body" style="padding:0;">
+                                <table class="pdf-table">
+                                    <thead><tr><th class="center">#</th><th>วันที่บิน</th><th class="right">จำนวนงาน</th><th class="right">พื้นที่บินจริงรวม (ไร่/วัน)</th><th class="right">จำนวนทีม</th><th>พื้นที่/จังหวัด</th></tr></thead>
+                                    <tbody>${dailyRows}</tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="pdf-section">
+                            <div class="pdf-section-title">5 อันดับแปลงที่มีความคลาดเคลื่อนสูงสุด</div>
+                            <div class="pdf-section-body" style="padding:0;">
+                                <table class="pdf-table">
+                                    <thead><tr><th class="center">#</th><th>ชื่อเกษตรกร</th><th>จังหวัด</th><th class="right">พท.เอกสาร</th><th class="right">พท.บินจริง</th><th class="right">ความต่าง</th></tr></thead>
+                                    <tbody>${topVarianceRows}</tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="pdf-section">
+                            <div class="pdf-section-title">รายละเอียดการปฏิบัติงานรายแปลง</div>
+                            <div class="pdf-section-body" style="padding:0;">
+                                <table class="pdf-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="center">#</th><th>วันที่บิน</th><th>ทีมงาน</th><th>ชื่อเกษตรกร</th><th>จังหวัด</th><th class="right">พท.เอกสาร</th><th class="right">พท.บินจริง</th><th class="right">ความต่าง</th><th class="center">สถานะ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>${detailRows}</tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="pdf-signature">
+                            <div>ผู้จัดทำรายงาน</div>
+                            <div>ผู้ตรวจสอบ</div>
+                            <div>ผู้อนุมัติ</div>
+                        </div>
+                        <div class="pdf-footer">พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH', { timeZone: APP_TIME_ZONE })} • Ingredion Agribusiness</div>
+                    </div>
+                </div>
+            `;
             printSec.innerHTML = html;
         }
 
         function printPDF() {
-            calculateExportSummary(); // อัปเดตข้อมูลล่าสุดก่อนปริ้นต์
-            window.print(); // สั่งพิมพ์ (ผู้ใช้สามารถเลือก Save as PDF ในเมนูของ Browser ได้เลย)
+            const filtered = getFilteredReports();
+            calculateExportSummary();
+            if (filtered.length === 0) {
+                alert('ไม่พบข้อมูลตามเงื่อนไขที่เลือก กรุณาเลือกชุดข้อมูลใหม่');
+                return;
+            }
+            window.print();
         }
 
         function exportCSV() {
             const filtered = getFilteredReports();
-            let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; // \uFEFF คือ BOM เพื่อให้ Excel อ่านภาษาไทยได้
-            csvContent += "วันที่บิน,ทีมงาน,ชื่อเกษตรกร,จังหวัด(โซน),พื้นที่เอกสาร(ไร่),พื้นที่บินจริง(ไร่),ความต่าง(%),สถานะ\n";
+            const meta = getExportMeta();
+            if (filtered.length === 0) {
+                alert('ไม่พบข้อมูลตามเงื่อนไขที่เลือก กรุณาเลือกชุดข้อมูลใหม่');
+                return;
+            }
+
+            const daily = getDailyPerformance(filtered);
+            const dailyMap = {};
+            daily.days.forEach(d => dailyMap[d.dateKey] = d);
+
+            const headers = [
+                'รหัสรายงาน','วันที่บิน','ทีมงาน','ชื่อเกษตรกร','รหัสแปลง','จังหวัด','อำเภอ','ตำบล','ละติจูด','ลองจิจูด',
+                'วันที่ปลูก','สายพันธุ์','พื้นที่เอกสาร(ไร่)','พื้นที่บินจริง(ไร่)','ผลต่างพื้นที่(ไร่)','ความต่าง(%)',
+                'ไร่/วันของวันที่บิน','จำนวนงานในวันเดียวกัน','จำนวนทีมในวันเดียวกัน',
+                'เวลาเริ่ม','เวลาสิ้นสุด','รุ่นโดรน','อัตราพ่น(ลิตร/ไร่)','สาร/ปุ๋ยที่ใช้','สถานะ'
+            ];
+            const csvRows = [headers.map(csvCell).join(',')];
 
             filtered.forEach(r => {
-                const doc = parseFloat(r.docArea) || 0;
-                const act = parseFloat(r.actualArea) || 0;
-                const diff = doc > 0 ? ((Math.abs(act - doc) / doc) * 100).toFixed(2) : "0.00";
-                const symbol = act > doc ? '+' : (act < doc ? '-' : '');
-                const opDate = r.operationDate ? new Date(r.operationDate).toLocaleDateString('th-TH') : '';
-                
-                // ใส่ "" ครอบข้อความเพื่อป้องกันปัญหาเครื่องหมาย comma ในข้อความ
-                let row = `"${opDate}","${r.teamName}","${r.farmerName}","${r.province}",${doc.toFixed(2)},${act.toFixed(2)},"${symbol}${diff}%","${r.status}"`;
-                csvContent += row + "\n";
+                const area = getAreaDiff(r);
+                const day = dailyMap[getDateKey(r.operationDate)] || { area: 0, jobs: 0, teamCount: 0 };
+                const row = [
+                    r.id,
+                    parseThaiDate(r.operationDate),
+                    r.teamName,
+                    r.farmerName,
+                    r.plotId,
+                    r.province,
+                    r.district,
+                    r.subdistrict,
+                    r.lat,
+                    r.lng,
+                    parseThaiDate(r.plantingDate),
+                    r.variety,
+                    area.doc.toFixed(2),
+                    area.act.toFixed(2),
+                    area.diffRai.toFixed(2),
+                    `${area.symbol}${area.diffPercent.toFixed(2)}%`,
+                    day.area.toFixed(2),
+                    day.jobs,
+                    day.teamCount,
+                    r.startTime,
+                    r.endTime,
+                    r.droneModel,
+                    r.sprayRate,
+                    r.fertilizer,
+                    r.status || 'รอตรวจงาน'
+                ];
+                csvRows.push(row.map(csvCell).join(','));
             });
 
-            const zone = document.getElementById('exportZone').value;
-            const month = document.getElementById('exportMonth').value;
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `DroneReport_${zone}_${month||'ALL'}.csv`);
+            csvRows.push('');
+            csvRows.push(['สรุปประสิทธิภาพรายวัน'].map(csvCell).join(','));
+            csvRows.push(['วันที่บิน','จำนวนงาน','พื้นที่บินจริงรวม(ไร่/วัน)','จำนวนทีม','จังหวัด'].map(csvCell).join(','));
+            daily.days.forEach(d => {
+                csvRows.push([d.dateText, d.jobs, d.area.toFixed(2), d.teamCount, d.provincesText].map(csvCell).join(','));
+            });
+
+            const csvContent = '\uFEFF' + csvRows.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            const safeName = `Ingredion_DroneReport_${meta.dataset}_${meta.fileTeam}_${meta.fileZone}_${meta.fileDateRange}`.replace(/[^a-zA-Z0-9ก-๙_-]+/g, '_');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `${safeName}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         }
         // ==========================================
 
@@ -797,7 +1261,7 @@
             const bounds = [];
             myReports.forEach(r => {
                 if(r.lat && r.lng) {
-                    let opDate = r.operationDate ? new Date(r.operationDate).toLocaleDateString('th-TH') : '';
+                    let opDate = parseThaiDate(r.operationDate);
                     const marker = L.marker([r.lat, r.lng]).bindPopup(`<b>${r.farmerName}</b><br>พื้นที่: ${r.actualArea} ไร่<br>วันที่: ${opDate}<br>สถานะ: ${r.status || 'รอตรวจงาน'}`).addTo(dashMap);
                     dashMarkers.push(marker); bounds.push([r.lat, r.lng]);
                 }
@@ -873,7 +1337,7 @@
             document.getElementById('reportId').value = r.id;
             document.getElementById('farmerName').value = r.farmerName;
             document.getElementById('plotId').value = r.plotId;
-            document.getElementById('plantingDate').value = r.plantingDate.split('T')[0];
+            document.getElementById('plantingDate').value = getDateKey(r.plantingDate);
             document.getElementById('variety').value = r.variety || ""; 
             document.getElementById('docArea').value = r.docArea;
             
@@ -888,7 +1352,7 @@
             document.getElementById('lat').value = r.lat; document.getElementById('lng').value = r.lng;
             if(r.lat && r.lng) { formMap.setView([r.lat, r.lng], 15); formMarker.setLatLng([r.lat, r.lng]); }
             
-            document.getElementById('operationDate').value = r.operationDate.split('T')[0];
+            document.getElementById('operationDate').value = getDateKey(r.operationDate);
             
             let st = r.startTime, et = r.endTime;
             if(st && st.includes('T')) st = st.substring(11,16); else if(st && st.length > 5) st = st.substring(0,5);
@@ -971,7 +1435,7 @@
             myReports.forEach((r) => {
                 let statusColor = r.status === "จ่ายเงินแล้ว" || r.status === "ผ่าน" ? "color: var(--success); font-weight: bold;" : "color: #f39c12;";
                 let isEditable = r.status === "รอตรวจงาน"; 
-                let opDate = r.operationDate ? new Date(r.operationDate).toLocaleDateString('th-TH') : '';
+                let opDate = parseThaiDate(r.operationDate);
                 
                 tbody.innerHTML += `
                     <tr>
