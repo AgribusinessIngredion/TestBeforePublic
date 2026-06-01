@@ -87,6 +87,44 @@
         /* Maps */
         #map, #dashboardMap, #adminMap { height: 320px; width: 100%; margin-top: 5px; border-radius: 4px; z-index: 1; border: 1px solid var(--border); }
         
+
+        /* Admin filters / team summary */
+        .report-filter-panel {
+            background: linear-gradient(135deg, #ffffff 0%, #f5fbef 55%, #fff8e6 100%);
+            border: 1px solid rgba(31,122,58,0.16);
+            border-radius: 18px;
+            padding: 18px;
+            margin: 18px 0 25px;
+            box-shadow: 0 12px 28px rgba(15,79,42,0.08);
+        }
+        .filter-toolbar { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: end; }
+        .filter-toolbar .form-group { margin-bottom: 0; }
+        .mini-btn { height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid rgba(31,122,58,0.22); background: #ffffff; color: var(--primary-dark); font-family: 'Sarabun', sans-serif; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .mini-btn:hover { background: #eef8e9; transform: translateY(-1px); }
+        .status-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-top: 14px; }
+        .status-card { background: #fff; border: 1px solid #e5eedf; border-radius: 16px; padding: 14px; box-shadow: 0 7px 18px rgba(15,79,42,0.06); cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
+        .status-card:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(15,79,42,0.12); }
+        .status-card.active { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(31,122,58,0.12); }
+        .status-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: var(--primary); }
+        .status-card.pending::before { background: #f59e0b; }
+        .status-card.approved::before { background: #22c55e; }
+        .status-card.paid::before { background: #0f766e; }
+        .status-card.total::before { background: linear-gradient(90deg, var(--primary), var(--accent)); }
+        .status-card span { color: var(--text-muted); font-size: 0.86rem; display:block; }
+        .status-card strong { font-size: 1.5rem; color: #1f2937; display:block; margin-top: 3px; }
+        .status-card small { color: var(--text-muted); font-size: 0.78rem; }
+        .team-summary-box { border: 1px solid #e5eedf; border-radius: 16px; overflow: hidden; background: #fff; box-shadow: 0 9px 22px rgba(15,79,42,0.06); margin-bottom: 25px; }
+        .team-summary-header { padding: 12px 15px; background: linear-gradient(90deg, rgba(31,122,58,0.12), rgba(244,165,28,0.16)); color: var(--primary-dark); font-weight: 800; display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+        .team-summary-table { width: 100%; border-collapse: collapse; margin: 0; font-size: 0.92rem; }
+        .team-summary-table th { background: #f7fbf2; color: var(--primary-dark); }
+        .team-summary-table td, .team-summary-table th { padding: 9px 10px; border-bottom: 1px solid #eef3ea; }
+        .status-pill { display:inline-block; padding: 4px 9px; border-radius: 999px; font-size: 0.78rem; font-weight: 700; border: 1px solid transparent; }
+        .status-pill.pending { background:#fff7ed; color:#c2410c; border-color:#fed7aa; }
+        .status-pill.approved { background:#ecfdf5; color:#15803d; border-color:#bbf7d0; }
+        .status-pill.paid { background:#ecfeff; color:#0f766e; border-color:#a5f3fc; }
+        .status-pill.other { background:#f1f5f9; color:#475569; border-color:#cbd5e1; }
+        .muted-note { color: var(--text-muted); font-size: 0.86rem; margin-top: 10px; }
+
         /* Export / PDF Report */
         .export-panel {
             background: linear-gradient(135deg, #ffffff 0%, #f7fbf2 58%, #fff8e6 100%);
@@ -173,10 +211,55 @@
     <div class="container view-section no-print" id="adminDashboardView" style="max-width: 950px;">
         <h2>📊 Dashboard (ผู้ดูแลระบบ)</h2>
         <div class="dashboard-grid">
-            <div class="stat-card"><h4>พื้นที่รวมทุกทีม (ไร่)</h4><p id="adminTotalArea">0.00</p></div>
-            <div class="stat-card"><h4>จำนวนงานทั้งหมด (แปลง)</h4><p id="adminTotalJobs">0</p></div>
+            <div class="stat-card"><h4>พื้นที่รวมตามตัวกรอง (ไร่)</h4><p id="adminTotalArea">0.00</p></div>
+            <div class="stat-card"><h4>จำนวนงานตามตัวกรอง (แปลง)</h4><p id="adminTotalJobs">0</p></div>
             <div class="stat-card"><h4>จำนวนวันที่มีการบิน</h4><p id="adminActiveDays">0</p></div>
             <div class="stat-card"><h4>เฉลี่ยไร่/วัน</h4><p id="adminAvgPerDay">0.00</p></div>
+        </div>
+
+        <h3 style="color: var(--primary-dark); border-bottom: 2px solid #dfead8;">🔎 ตัวกรองรายงาน Dashboard</h3>
+        <div class="report-filter-panel">
+            <div class="filter-toolbar">
+                <div class="form-group">
+                    <label>เลือกทีมโดรน:</label>
+                    <select id="dashboardTeamFilter" onchange="renderAdminDashboard()"><option value="ALL">-- ทุกทีม --</option></select>
+                </div>
+                <div class="form-group">
+                    <label>สถานะแปลง:</label>
+                    <select id="dashboardStatusFilter" onchange="renderAdminDashboard()">
+                        <option value="ALL">ทุกสถานะ</option>
+                        <option value="รอตรวจงาน">รอตรวจงาน</option>
+                        <option value="ผ่าน">ผ่าน</option>
+                        <option value="จ่ายเงินแล้ว">จ่ายเงินแล้ว</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>วันที่เริ่มต้น:</label>
+                    <input type="date" id="dashboardStartDate" onchange="renderAdminDashboard()">
+                </div>
+                <div class="form-group">
+                    <label>วันที่สิ้นสุด:</label>
+                    <input type="date" id="dashboardEndDate" onchange="renderAdminDashboard()">
+                </div>
+                <button type="button" class="mini-btn" onclick="clearDashboardFilters()">ล้างตัวกรอง</button>
+            </div>
+            <div class="status-summary-grid" id="dashboardStatusSummary"></div>
+            <div class="muted-note">* ใช้ตัวกรองนี้เพื่อตรวจสอบผลงานรายทีม รายวัน และสถานะของแต่ละแปลง โดยอ้างอิงจากวันที่บินที่ทีมรายงาน</div>
+        </div>
+
+        <h3 style="color: var(--primary-dark); border-bottom: 2px solid #dfead8;">🚁 สรุปผลงานทีมโดรนรายวัน</h3>
+        <div class="team-summary-box" id="teamDailySummaryBox">
+            <div class="team-summary-header"><span>สรุปวันที่บิน / จำนวนแปลง / พื้นที่บินจริง</span><span id="teamDailySummaryText">0 วัน | 0 แปลง | 0.00 ไร่</span></div>
+            <div style="overflow-x:auto; max-height:360px; overflow-y:auto;">
+                <table class="team-summary-table" id="teamDailySummaryTable">
+                    <thead>
+                        <tr>
+                            <th>ทีมโดรน</th><th>วันที่บิน</th><th style="text-align:right;">จำนวนแปลง</th><th style="text-align:right;">พื้นที่บินจริง (ไร่)</th><th style="text-align:right;">รอตรวจ</th><th style="text-align:right;">ผ่าน</th><th style="text-align:right;">จ่ายเงินแล้ว</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
 
         <!-- Section: Export & Summary -->
@@ -244,7 +327,7 @@
         <h3>📝 รายการรายงาน (อัปเดตสถานะ)</h3>
         <div style="overflow-x: auto;">
             <table id="adminAllReportsTable">
-                <thead><tr><th>วันที่บิน</th><th>ทีมงาน</th><th>ชื่อเกษตรกร</th><th>พื้นที่(ไร่)</th><th>สถานะ</th></tr></thead>
+                <thead><tr><th>วันที่บิน</th><th>ทีมงาน</th><th>รหัสแปลง</th><th>ชื่อเกษตรกร</th><th>จังหวัด</th><th>พื้นที่(ไร่)</th><th>สถานะ</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -625,59 +708,213 @@
         // === Admin Dashboard & Reports ===
         let adminMap = null, adminMarkers = [];
         
-        function renderAdminDashboard() {
-            let totalArea = 0;
-            allReports.forEach(r => totalArea += parseFloat(r.actualArea) || 0);
-            const allDaily = getDailyPerformance(allReports);
-            document.getElementById('adminTotalArea').innerText = totalArea.toFixed(2); // แก้เป็น 2 ตำแหน่ง
-            document.getElementById('adminTotalJobs').innerText = allReports.length;
-            document.getElementById('adminActiveDays').innerText = allDaily.activeDays;
-            document.getElementById('adminAvgPerDay').innerText = allDaily.avgAreaPerDay.toFixed(2);
 
-            // อัปเดต Dropdown สำหรับการ Export
-            const exZone = document.getElementById('exportZone');
-            const exTeam = document.getElementById('exportTeam');
-            const currZone = exZone.value;
-            const currTeam = exTeam.value;
+        function getReportStatus(report) {
+            return report.status || 'รอตรวจงาน';
+        }
+
+        function getDashboardFilteredReports() {
+            const teamEl = document.getElementById('dashboardTeamFilter');
+            const statusEl = document.getElementById('dashboardStatusFilter');
+            const startEl = document.getElementById('dashboardStartDate');
+            const endEl = document.getElementById('dashboardEndDate');
+            const team = teamEl ? teamEl.value : 'ALL';
+            const status = statusEl ? statusEl.value : 'ALL';
+            const startDate = startEl ? startEl.value : '';
+            const endDate = endEl ? endEl.value : '';
+
+            return allReports.filter(r => {
+                const dateKey = getDateKey(r.operationDate);
+                if (team !== 'ALL' && r.teamName !== team) return false;
+                if (status !== 'ALL' && getReportStatus(r) !== status) return false;
+                if (startDate && (!dateKey || dateKey < startDate)) return false;
+                if (endDate && (!dateKey || dateKey > endDate)) return false;
+                return true;
+            });
+        }
+
+        function clearDashboardFilters() {
+            const ids = ['dashboardTeamFilter', 'dashboardStatusFilter', 'dashboardStartDate', 'dashboardEndDate'];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                if (el.tagName === 'SELECT') el.value = 'ALL';
+                else el.value = '';
+            });
+            renderAdminDashboard();
+        }
+
+        function setDashboardStatusFilter(status) {
+            const el = document.getElementById('dashboardStatusFilter');
+            if (!el) return;
+            el.value = status || 'ALL';
+            renderAdminDashboard();
+        }
+
+        function populateDashboardFilterDropdowns(uniqueTeams) {
+            const dashTeam = document.getElementById('dashboardTeamFilter');
+            if (!dashTeam) return;
+            const currDashTeam = dashTeam.value;
+            dashTeam.innerHTML = '<option value="ALL">-- ทุกทีม --</option>';
+            uniqueTeams.forEach(t => dashTeam.add(new Option(t, t)));
+            if ([...dashTeam.options].some(o => o.value === currDashTeam)) dashTeam.value = currDashTeam;
+        }
+
+        function renderStatusSummaryCards(reports) {
+            const statusEl = document.getElementById('dashboardStatusFilter');
+            const activeStatus = statusEl ? statusEl.value : 'ALL';
+            const statusCounts = { total: reports.length, pending: 0, approved: 0, paid: 0 };
+            const statusAreas = { total: 0, pending: 0, approved: 0, paid: 0 };
+
+            reports.forEach(r => {
+                const area = parseFloat(r.actualArea) || 0;
+                const status = getReportStatus(r);
+                statusAreas.total += area;
+                if (status === 'รอตรวจงาน') { statusCounts.pending += 1; statusAreas.pending += area; }
+                else if (status === 'ผ่าน') { statusCounts.approved += 1; statusAreas.approved += area; }
+                else if (status === 'จ่ายเงินแล้ว') { statusCounts.paid += 1; statusAreas.paid += area; }
+            });
+
+            const box = document.getElementById('dashboardStatusSummary');
+            if (!box) return;
+            box.innerHTML = `
+                <div class="status-card total ${activeStatus === 'ALL' ? 'active' : ''}" onclick="setDashboardStatusFilter('ALL')">
+                    <span>ทั้งหมดตามตัวกรอง</span><strong>${statusCounts.total} แปลง</strong><small>${statusAreas.total.toFixed(2)} ไร่</small>
+                </div>
+                <div class="status-card pending ${activeStatus === 'รอตรวจงาน' ? 'active' : ''}" onclick="setDashboardStatusFilter('รอตรวจงาน')">
+                    <span>รอตรวจงาน</span><strong>${statusCounts.pending} แปลง</strong><small>${statusAreas.pending.toFixed(2)} ไร่</small>
+                </div>
+                <div class="status-card approved ${activeStatus === 'ผ่าน' ? 'active' : ''}" onclick="setDashboardStatusFilter('ผ่าน')">
+                    <span>ผ่าน</span><strong>${statusCounts.approved} แปลง</strong><small>${statusAreas.approved.toFixed(2)} ไร่</small>
+                </div>
+                <div class="status-card paid ${activeStatus === 'จ่ายเงินแล้ว' ? 'active' : ''}" onclick="setDashboardStatusFilter('จ่ายเงินแล้ว')">
+                    <span>จ่ายเงินแล้ว</span><strong>${statusCounts.paid} แปลง</strong><small>${statusAreas.paid.toFixed(2)} ไร่</small>
+                </div>`;
+        }
+
+        function getTeamDailySummary(reports) {
+            const grouped = {};
+            reports.forEach(r => {
+                const dateKey = getDateKey(r.operationDate);
+                const teamName = r.teamName || 'ไม่ระบุทีม';
+                if (!dateKey) return;
+                const key = `${teamName}__${dateKey}`;
+                if (!grouped[key]) grouped[key] = {
+                    teamName,
+                    dateKey,
+                    dateText: formatFilterDate(dateKey),
+                    jobs: 0,
+                    area: 0,
+                    pending: 0,
+                    approved: 0,
+                    paid: 0
+                };
+                grouped[key].jobs += 1;
+                grouped[key].area += parseFloat(r.actualArea) || 0;
+                const status = getReportStatus(r);
+                if (status === 'รอตรวจงาน') grouped[key].pending += 1;
+                else if (status === 'ผ่าน') grouped[key].approved += 1;
+                else if (status === 'จ่ายเงินแล้ว') grouped[key].paid += 1;
+            });
+
+            return Object.values(grouped).sort((a, b) => {
+                const dateCompare = b.dateKey.localeCompare(a.dateKey);
+                if (dateCompare !== 0) return dateCompare;
+                return a.teamName.localeCompare(b.teamName, 'th');
+            });
+        }
+
+        function renderTeamDailySummary(reports) {
+            const rows = getTeamDailySummary(reports);
+            const tbody = document.querySelector('#teamDailySummaryTable tbody');
+            const summaryText = document.getElementById('teamDailySummaryText');
+            if (!tbody) return;
+
+            const totalArea = reports.reduce((sum, r) => sum + (parseFloat(r.actualArea) || 0), 0);
+            const activeDays = new Set(reports.map(r => getDateKey(r.operationDate)).filter(Boolean)).size;
+            if (summaryText) summaryText.innerText = `${activeDays} วัน | ${reports.length} แปลง | ${totalArea.toFixed(2)} ไร่`;
+
+            if (!rows.length) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:16px;">ไม่พบข้อมูลตามตัวกรองที่เลือก</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = rows.map(r => `
+                <tr>
+                    <td>${escapeHTML(r.teamName)}</td>
+                    <td>${r.dateText}</td>
+                    <td style="text-align:right; font-weight:700;">${r.jobs}</td>
+                    <td style="text-align:right; font-weight:700; color:var(--primary-dark);">${r.area.toFixed(2)}</td>
+                    <td style="text-align:right;"><span class="status-pill pending">${r.pending}</span></td>
+                    <td style="text-align:right;"><span class="status-pill approved">${r.approved}</span></td>
+                    <td style="text-align:right;"><span class="status-pill paid">${r.paid}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        function renderAdminDashboard() {
             const uniqueZones = [...new Set(allReports.map(r => r.province).filter(Boolean))].sort();
             const uniqueTeams = [...new Set(allReports.map(r => r.teamName).filter(Boolean))].sort();
 
-            exZone.innerHTML = '<option value="ALL">-- ทุกโซน (ทั้งหมด) --</option>';
-            uniqueZones.forEach(z => exZone.add(new Option(z, z)));
-            if ([...exZone.options].some(o => o.value === currZone)) exZone.value = currZone;
+            // อัปเดต Dropdown สำหรับ Dashboard filter และ Export filter โดยรักษาค่าที่เลือกไว้
+            populateDashboardFilterDropdowns(uniqueTeams);
 
-            exTeam.innerHTML = '<option value="ALL">-- ทุกทีม --</option>';
-            uniqueTeams.forEach(t => exTeam.add(new Option(t, t)));
-            if ([...exTeam.options].some(o => o.value === currTeam)) exTeam.value = currTeam;
+            const exZone = document.getElementById('exportZone');
+            const exTeam = document.getElementById('exportTeam');
+            if (exZone) {
+                const currZone = exZone.value;
+                exZone.innerHTML = '<option value="ALL">-- ทุกโซน (ทั้งหมด) --</option>';
+                uniqueZones.forEach(z => exZone.add(new Option(z, z)));
+                if ([...exZone.options].some(o => o.value === currZone)) exZone.value = currZone;
+            }
+            if (exTeam) {
+                const currTeam = exTeam.value;
+                exTeam.innerHTML = '<option value="ALL">-- ทุกทีม --</option>';
+                uniqueTeams.forEach(t => exTeam.add(new Option(t, t)));
+                if ([...exTeam.options].some(o => o.value === currTeam)) exTeam.value = currTeam;
+            }
 
-            // 1. คำนวณ Top 5 ความคลาดเคลื่อนสูงสุด
-            const diffs = allReports.map(r => {
+            const dashboardReports = getDashboardFilteredReports();
+            const filteredDaily = getDailyPerformance(dashboardReports);
+            const totalArea = dashboardReports.reduce((sum, r) => sum + (parseFloat(r.actualArea) || 0), 0);
+
+            document.getElementById('adminTotalArea').innerText = totalArea.toFixed(2);
+            document.getElementById('adminTotalJobs').innerText = dashboardReports.length;
+            document.getElementById('adminActiveDays').innerText = filteredDaily.activeDays;
+            document.getElementById('adminAvgPerDay').innerText = filteredDaily.avgAreaPerDay.toFixed(2);
+
+            renderStatusSummaryCards(dashboardReports);
+            renderTeamDailySummary(dashboardReports);
+
+            // 1. คำนวณ Top 5 ความคลาดเคลื่อนสูงสุด ตามตัวกรอง Dashboard
+            const diffs = dashboardReports.map(r => {
                 const doc = parseFloat(r.docArea) || 0;
                 const act = parseFloat(r.actualArea) || 0;
                 const diff = Math.abs(act - doc);
                 const perc = doc > 0 ? (diff / doc) * 100 : 0;
                 return { ...r, diffVal: diff, perc: perc, doc: doc, act: act };
-            }).filter(r => r.doc > 0); // คำนวณเฉพาะที่มีตัวเลขพท.เอกสาร
-            
-            // เรียงลำดับจากความต่างเปอร์เซ็นต์มากไปน้อย
+            }).filter(r => r.doc > 0);
             diffs.sort((a, b) => b.perc - a.perc);
             const top5 = diffs.slice(0, 5);
-            
             const topTbody = document.querySelector('#topDiffTable tbody');
             topTbody.innerHTML = '';
-            top5.forEach(r => {
-                let symbol = r.act > r.doc ? '+' : (r.act < r.doc ? '-' : '');
-                let color = r.act > r.doc ? '#27ae60' : '#e74c3c';
-                topTbody.innerHTML += `<tr>
-                    <td>${r.farmerName}</td>
-                    <td>${r.province || '-'}</td>
-                    <td>${r.doc.toFixed(2)}</td>
-                    <td>${r.act.toFixed(2)}</td>
-                    <td style="color:${color}; font-weight:bold;">${symbol}${r.perc.toFixed(2)}%</td>
-                </tr>`;
-            });
+            if (!top5.length) {
+                topTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">ไม่พบข้อมูลตามตัวกรองที่เลือก</td></tr>';
+            } else {
+                top5.forEach(r => {
+                    let symbol = r.act > r.doc ? '+' : (r.act < r.doc ? '-' : '');
+                    let color = r.act > r.doc ? '#27ae60' : '#e74c3c';
+                    topTbody.innerHTML += `<tr>
+                        <td>${escapeHTML(r.farmerName)}</td>
+                        <td>${escapeHTML(r.province || '-')}</td>
+                        <td>${r.doc.toFixed(2)}</td>
+                        <td>${r.act.toFixed(2)}</td>
+                        <td style="color:${color}; font-weight:bold;">${symbol}${r.perc.toFixed(2)}%</td>
+                    </tr>`;
+                });
+            }
 
-            // 2. แผนที่
+            // 2. แผนที่ ตามตัวกรอง Dashboard
             if (!adminMap) {
                 adminMap = L.map('adminMap').setView([14.9, 100.1], 7);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(adminMap);
@@ -685,11 +922,12 @@
             adminMarkers.forEach(m => adminMap.removeLayer(m));
             adminMarkers = [];
             const bounds = [];
-            allReports.forEach(r => {
+            dashboardReports.forEach(r => {
                 if(r.lat && r.lng) {
-                    let dotColor = r.status === 'ผ่าน' || r.status === 'จ่ายเงินแล้ว' ? 'green' : 'orange';
+                    const status = getReportStatus(r);
+                    let dotColor = status === 'ผ่าน' || status === 'จ่ายเงินแล้ว' ? 'green' : 'orange';
                     const marker = L.marker([r.lat, r.lng])
-                        .bindPopup(`<b>${r.teamName}</b><br>${r.farmerName}<br>พื้นที่: ${r.actualArea} ไร่<br>สถานะ: <b style="color:${dotColor}">${r.status}</b>`)
+                        .bindPopup(`<b>${escapeHTML(r.teamName)}</b><br>${escapeHTML(r.farmerName)}<br>วันที่บิน: ${parseThaiDate(r.operationDate)}<br>พื้นที่: ${r.actualArea} ไร่<br>สถานะ: <b style="color:${dotColor}">${escapeHTML(status)}</b>`)
                         .addTo(adminMap);
                     adminMarkers.push(marker);
                     bounds.push([r.lat, r.lng]);
@@ -697,32 +935,42 @@
             });
             if(bounds.length > 0) setTimeout(() => adminMap.fitBounds(bounds), 300);
 
-            // 3. ตารางสถานะ
+            // 3. ตารางสถานะรายแปลง ตามตัวกรอง Dashboard
             const reportTbody = document.querySelector('#adminAllReportsTable tbody');
             reportTbody.innerHTML = '';
-            const sortedReports = [...allReports].reverse();
-            sortedReports.forEach(r => {
-                let sWait = r.status==='รอตรวจงาน'?'selected':'';
-                let sPass = r.status==='ผ่าน'?'selected':'';
-                let sPaid = r.status==='จ่ายเงินแล้ว'?'selected':'';
-                let opDate = parseThaiDate(r.operationDate);
-                
-                reportTbody.innerHTML += `
-                    <tr>
-                        <td>${opDate}</td>
-                        <td>${escapeHTML(r.teamName)}</td>
-                        <td>${escapeHTML(r.farmerName)}</td>
-                        <td style="text-align:right;">${(parseFloat(r.actualArea) || 0).toFixed(2)}</td>
-                        <td>
-                            <select class="status-dropdown" onchange="updateReportStatus('${r.id}', this.value)" style="border-color: ${sPass||sPaid ? '#27ae60' : '#f39c12'};">
-                                <option value="รอตรวจงาน" ${sWait}>รอตรวจงาน</option>
-                                <option value="ผ่าน" ${sPass}>ผ่าน</option>
-                                <option value="จ่ายเงินแล้ว" ${sPaid}>จ่ายเงินแล้ว</option>
-                            </select>
-                        </td>
-                    </tr>
-                `;
-            });
+            const sortedReports = [...dashboardReports].sort((a, b) => (getDateKey(b.operationDate) || '').localeCompare(getDateKey(a.operationDate) || ''));
+            if (!sortedReports.length) {
+                reportTbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">ไม่พบข้อมูลตามตัวกรองที่เลือก</td></tr>';
+            } else {
+                sortedReports.forEach(r => {
+                    const status = getReportStatus(r);
+                    let sWait = status==='รอตรวจงาน'?'selected':'';
+                    let sPass = status==='ผ่าน'?'selected':'';
+                    let sPaid = status==='จ่ายเงินแล้ว'?'selected':'';
+                    let opDate = parseThaiDate(r.operationDate);
+                    let statusClass = status === 'จ่ายเงินแล้ว' ? 'paid' : (status === 'ผ่าน' ? 'approved' : 'pending');
+                    reportTbody.innerHTML += `
+                        <tr>
+                            <td>${opDate}</td>
+                            <td>${escapeHTML(r.teamName)}</td>
+                            <td>${escapeHTML(r.plotId || '-')}</td>
+                            <td>${escapeHTML(r.farmerName)}</td>
+                            <td>${escapeHTML(r.province || '-')}</td>
+                            <td style="text-align:right;">${(parseFloat(r.actualArea) || 0).toFixed(2)}</td>
+                            <td>
+                                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                                    <span class="status-pill ${statusClass}">${escapeHTML(status)}</span>
+                                    <select class="status-dropdown" onchange="updateReportStatus('${r.id}', this.value)" style="border-color: ${sPass||sPaid ? '#27ae60' : '#f39c12'}; width:auto; min-width:120px;">
+                                        <option value="รอตรวจงาน" ${sWait}>รอตรวจงาน</option>
+                                        <option value="ผ่าน" ${sPass}>ผ่าน</option>
+                                        <option value="จ่ายเงินแล้ว" ${sPaid}>จ่ายเงินแล้ว</option>
+                                    </select>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
 
             // 4. ตาราง Logins
             const logTbody = document.querySelector('#adminLogTable tbody');
@@ -730,10 +978,10 @@
             loginLogs.forEach(log => {
                 let d = new Date(log.time);
                 let timeStr = `${d.toLocaleDateString('th-TH', { timeZone: APP_TIME_ZONE })} ${d.toLocaleTimeString('th-TH', { timeZone: APP_TIME_ZONE })}`;
-                logTbody.innerHTML += `<tr><td>${timeStr}</td><td>${log.teamName}</td><td>${log.username}</td></tr>`;
+                logTbody.innerHTML += `<tr><td>${timeStr}</td><td>${escapeHTML(log.teamName)}</td><td>${escapeHTML(log.username)}</td></tr>`;
             });
 
-            calculateExportSummary(); // เตรียมพร้อมข้อมูลสำหรับปริ้นต์
+            calculateExportSummary();
         }
 
         async function updateReportStatus(reportId, newStatus) {
