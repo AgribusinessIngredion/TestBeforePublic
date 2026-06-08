@@ -216,8 +216,15 @@
 
                 <!-- Footer Actions -->
                 <div class="p-4 border-t border-slate-100 bg-white shrink-0 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <div class="text-sm font-bold text-brand bg-brand/10 px-3 py-1 rounded-lg">
-                        <span id="row-count">0</span> รายการ
+                    <div class="flex flex-wrap items-center gap-2 text-sm">
+                        <div class="font-bold text-brand bg-brand/10 px-3 py-1 rounded-lg border border-brand/10">
+                            <i class="fa-solid fa-list-ol mr-1"></i>
+                            <span id="row-count">0</span> รายการ
+                        </div>
+                        <div class="font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-100">
+                            <i class="fa-solid fa-chart-area mr-1"></i>
+                            พื้นที่ปลูกรวม: <span id="total-planting-area">0</span> ไร่
+                        </div>
                     </div>
                     <div class="flex gap-3">
                         <button onclick="exportCSV()" class="px-6 py-2.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-xl hover:bg-slate-200 font-medium text-sm transition-colors shadow-sm flex items-center">
@@ -595,152 +602,6 @@
         const varietyOptions = ['HBwx1','HBwx2','HBwx3','HBwx4','HBwx5','HBwx6','HBwx7','HBwx8','WaxyR1','WaxyR2','KU50','Rayong5','Rayong7','Rayong9','Rayong72','Rayong81','HuayBong60','HuayBong80','Pirun','Other'];
         const monthArray = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-
-        // ==========================================
-        // CSV Import Guard & Auto-Correction Helpers
-        // เพิ่มระบบทำความสะอาดข้อมูลก่อนนำเข้า เพื่อป้องกันปัญหาแถวหายจากคำผิด/ช่องว่าง/รูปแบบไม่ตรง Master Data
-        // ==========================================
-        const provinceCorrections = {
-            'สุพรรบุรี': 'สุพรรณบุรี',
-            'สุพรรณบรี': 'สุพรรณบุรี',
-            'นครราชสีมา ': 'นครราชสีมา'
-        };
-
-        const thaiMonthMap = {
-            'มค':'Jan','ม.ค.':'Jan','มกราคม':'Jan','jan':'Jan','january':'Jan','1':'Jan','01':'Jan',
-            'กพ':'Feb','ก.พ.':'Feb','กุมภาพันธ์':'Feb','feb':'Feb','february':'Feb','2':'Feb','02':'Feb',
-            'มีค':'Mar','มี.ค.':'Mar','มีนาคม':'Mar','mar':'Mar','march':'Mar','3':'Mar','03':'Mar',
-            'เมย':'Apr','เม.ย.':'Apr','เมษายน':'Apr','apr':'Apr','april':'Apr','4':'Apr','04':'Apr',
-            'พค':'May','พ.ค.':'May','พฤษภาคม':'May','may':'May','5':'May','05':'May',
-            'มิย':'Jun','มิ.ย.':'Jun','มิถุนายน':'Jun','jun':'Jun','june':'Jun','6':'Jun','06':'Jun',
-            'กค':'Jul','ก.ค.':'Jul','กรกฎาคม':'Jul','jul':'Jul','july':'Jul','7':'Jul','07':'Jul',
-            'สค':'Aug','ส.ค.':'Aug','สิงหาคม':'Aug','aug':'Aug','august':'Aug','8':'Aug','08':'Aug',
-            'กย':'Sep','ก.ย.':'Sep','กันยายน':'Sep','sep':'Sep','september':'Sep','9':'Sep','09':'Sep',
-            'ตค':'Oct','ต.ค.':'Oct','ตุลาคม':'Oct','oct':'Oct','october':'Oct','10':'Oct',
-            'พย':'Nov','พ.ย.':'Nov','พฤศจิกายน':'Nov','nov':'Nov','november':'Nov','11':'Nov',
-            'ธค':'Dec','ธ.ค.':'Dec','ธันวาคม':'Dec','dec':'Dec','december':'Dec','12':'Dec'
-        };
-
-        function normalizeTextSmart(value) {
-            if (value === null || value === undefined) return '';
-            let s = String(value);
-            s = s.normalize ? s.normalize('NFC') : s;
-            s = s.replace(/\uFEFF/g, '').replace(/\u00A0/g, ' ').replace(/[\u200B-\u200D\u2060]/g, '');
-            s = s.replace(/[\r\n\t]/g, ' ');
-            s = s.replace(/\s+/g, ' ').trim();
-            if (['nan','none','null','undefined'].includes(s.toLowerCase())) return '';
-            return s;
-        }
-
-        function headerKeySmart(key) {
-            return normalizeTextSmart(key).toLowerCase().replace(/[\s_\-\.\(\)\/\\]/g, '');
-        }
-
-        function findCsvValue(row, keys, aliases, excludes = []) {
-            const normalizedAliases = aliases.map(a => headerKeySmart(a));
-            const normalizedExcludes = excludes.map(a => headerKeySmart(a));
-            // รอบแรก: หาแบบตรงตัวก่อน ลดโอกาสหยิบ Waxy type มาแทน Farmer Type
-            for (const key of keys) {
-                const ck = headerKeySmart(key);
-                if (normalizedAliases.includes(ck)) return row[key] ?? '';
-            }
-            // รอบสอง: หาแบบ contains
-            for (const key of keys) {
-                const ck = headerKeySmart(key);
-                const excluded = normalizedExcludes.some(ex => ck.includes(ex));
-                if (excluded) continue;
-                if (normalizedAliases.some(al => ck.includes(al))) return row[key] ?? '';
-            }
-            return '';
-        }
-
-        function bestMasterMatch(value, candidates) {
-            const raw = normalizeTextSmart(value);
-            if (!raw) return '';
-            if (candidates.includes(raw)) return raw;
-            const compact = raw.replace(/\s+/g, '');
-            let found = candidates.find(c => c.replace(/\s+/g, '') === compact);
-            if (found) return found;
-            return raw;
-        }
-
-        function normalizeProvince(value) {
-            let v = normalizeTextSmart(value);
-            if (!v) return '';
-            v = provinceCorrections[v] || v;
-            return bestMasterMatch(v, provinces);
-        }
-
-        function normalizeDistrict(value, province) {
-            const v = normalizeTextSmart(value);
-            if (!v) return '';
-            const p = normalizeProvince(province);
-            const candidates = (p && locationData[p]) ? Object.keys(locationData[p]) : [];
-            return bestMasterMatch(v, candidates);
-        }
-
-        function normalizeSubdistrict(value, province, district) {
-            const v = normalizeTextSmart(value);
-            if (!v) return '';
-            const p = normalizeProvince(province);
-            const d = normalizeDistrict(district, p);
-            const candidates = (p && d && locationData[p] && locationData[p][d]) ? locationData[p][d] : [];
-            return bestMasterMatch(v, candidates);
-        }
-
-        function normalizeIrrigation(value) {
-            const v = normalizeTextSmart(value).toLowerCase().replace(/\s+/g, '');
-            if (!v) return 'น้ำฝน (Rainfade)';
-            if (v.includes('drip') || v.includes('หยด')) return 'น้ำหยด (Drip)';
-            if (v.includes('rain') || v.includes('ฝน')) return 'น้ำฝน (Rainfade)';
-            return normalizeTextSmart(value);
-        }
-
-        function normalizeVariety(value) {
-            let v = normalizeTextSmart(value);
-            if (!v) return '';
-            v = v.replace(/\.0$/, '');
-            const compact = v.replace(/\s+/g, '').toLowerCase();
-            if (/^[1-8]$/.test(v)) return `HBwx${v}`;
-            const hb = compact.match(/^hb?wx([1-8])$/i) || compact.match(/^waxy([1-8])$/i);
-            if (hb) return `HBwx${hb[1]}`;
-            if (compact === 'r1') return 'WaxyR1';
-            if (compact === 'r2') return 'WaxyR2';
-            const exact = varietyOptions.find(opt => opt.toLowerCase() === v.toLowerCase());
-            return exact || v;
-        }
-
-        function normalizeMonth(value) {
-            let v = normalizeTextSmart(value);
-            if (!v) return '';
-            v = v.replace(/\.0$/, '');
-            const key = v.toLowerCase().replace(/\s+/g, '');
-            if (thaiMonthMap[key]) return thaiMonthMap[key];
-            const found = monthArray.find(m => key.startsWith(m.toLowerCase()));
-            return found || v;
-        }
-
-        function normalizePhone(value) {
-            let v = normalizeTextSmart(value);
-            if (v.endsWith('.0')) v = v.slice(0, -2);
-            let digits = v.replace(/[^0-9]/g, '');
-            if (digits.length === 9 && /^[689]/.test(digits)) digits = '0' + digits;
-            return digits;
-        }
-
-        function normalizeArea(value) {
-            let v = normalizeTextSmart(value).replace(/,/g, '').replace(/ไร่/g, '');
-            const n = parseFloat(v);
-            if (isNaN(n) || n <= 0) return '';
-            return Number.isInteger(n) ? String(n) : String(n);
-        }
-
-        function csvEscape(value) {
-            let s = String(value ?? '');
-            if (s.includes(',') || s.includes('"') || s.includes('\n')) s = `"${s.replace(/"/g, '""')}"`;
-            return s;
-        }
-
         // --- Custom Success Modal ---
         function showSuccessModal(title, desc) {
             document.getElementById('success-modal-title').innerText = title || 'บันทึกสำเร็จ';
@@ -1071,21 +932,15 @@
             let agroField = '';
             
             if (isAdmin()) {
-                let matchedAgroOption = false;
                 let userOpts = Object.keys(AGRONOMIST_USERS).map(key => {
                     let uFullName = AGRONOMIST_USERS[key].fullName;
                     let uFullNameLower = uFullName.toLowerCase();
                     let isMatch = false;
-                    if (defAgro && (uFullNameLower === defAgro || uFullNameLower.includes(defAgro) || defAgro.includes(uFullNameLower))) {
-                        isMatch = true; matchedAgroOption = true;
+                    if (defAgro && (uFullNameLower.includes(defAgro) || defAgro.includes(uFullNameLower))) {
+                        isMatch = true;
                     }
                     return `<option value="${uFullName}" ${isMatch ? 'selected' : ''}>${uFullName}</option>`;
                 }).join('');
-                // ถ้า CSV มีชื่อผู้ดูแลที่ยังไม่มีใน user list เช่น Jakkit ให้คงค่าไว้ ไม่ปล่อยว่าง
-                if (defAgro && !matchedAgroOption) {
-                    const importAgro = data.agronomist || document.getElementById('global-agronomist').value || '';
-                    userOpts = `<option value="${importAgro}" selected>${importAgro}</option>` + userOpts;
-                }
                 agroField = `<select id="agro-${r}" class="input-field text-brand-dark font-medium px-1"><option value="">- ผู้ดูแล -</option>${userOpts}</select>`;
             } else {
                 agroField = `<input type="text" id="agro-${r}" value="${currentFullName}" class="input-field bg-slate-50 text-slate-500 px-1" readonly>`;
@@ -1139,7 +994,36 @@
 
         function addRows(c=1) { for(let i=0;i<c;i++){ rowCounter++; const tr = document.createElement('tr'); tr.id = `row-${rowCounter}`; tr.className = "hover:bg-slate-50/50 transition-colors group"; tr.innerHTML = createRowHTML(rowCounter); document.getElementById('table-body').appendChild(tr); } updateRowCount(); }
         function deleteRow(id) { document.getElementById(`row-${id}`).remove(); updateRowCount(); }
-        function updateRowCount() { document.getElementById('row-count').innerText = document.getElementById('table-body').children.length; }
+        function formatRaiNumber(value) {
+            const num = Number(value) || 0;
+            return num.toLocaleString('th-TH', { maximumFractionDigits: 2 });
+        }
+
+        function updateEntrySummary() {
+            const tbody = document.getElementById('table-body');
+            const rows = tbody ? Array.from(tbody.children) : [];
+            let totalArea = 0;
+
+            rows.forEach(tr => {
+                const areaInput = tr.querySelector('input[id^="area-"]');
+                if (!areaInput) return;
+                const area = parseFloat(String(areaInput.value || '').replace(/,/g, ''));
+                if (!isNaN(area)) totalArea += area;
+            });
+
+            const rowCountEl = document.getElementById('row-count');
+            const totalAreaEl = document.getElementById('total-planting-area');
+            if (rowCountEl) rowCountEl.innerText = rows.length;
+            if (totalAreaEl) totalAreaEl.innerText = formatRaiNumber(totalArea);
+        }
+
+        function updateRowCount() { updateEntrySummary(); }
+
+        document.addEventListener('input', function(e) {
+            if (e.target && e.target.id && e.target.id.startsWith('area-')) {
+                updateEntrySummary();
+            }
+        });
 
         function updateDistricts(r, preVal=null) {
             const p = document.getElementById(`prov-${r}`).value;
@@ -1217,104 +1101,81 @@
         function processImportCSV(e) {
             const file = e.target.files[0]; if(!file) return;
             Papa.parse(file, { 
-                header: true, skipEmptyLines: true,
-                transformHeader: h => normalizeTextSmart(h),
+                header: true, skipEmptyLines: true, 
                 complete: function(res) {
                     if (!res.data || res.data.length === 0) { showToast('ไม่พบข้อมูลในไฟล์ CSV', 'error'); return; }
 
                     document.getElementById('table-body').innerHTML = ''; 
-                    rowCounter = 0;
-                    let errCnt = 0, warnCnt = 0, skippedCount = 0, correctedCount = 0;
-                    let importIssues = [];
-                    const requiredForUpload = ['farmer','prov','dist','sub','irrig','var','area','month'];
-
+                    rowCounter = 0; let eCnt=0, wCnt=0, skippedCount=0;
+                    
                     res.data.forEach((row, index) => {
                         try {
                             const keys = Object.keys(row);
-                            const sourceRow = index + 2;
+                            
+                            const getValStrict = (keywords, exclude = []) => {
+                                const k = keys.find(key => {
+                                    const cleanKey = String(key).toLowerCase().replace(/\s+/g,'');
+                                    const match = keywords.some(kw => cleanKey.includes(kw.toLowerCase().replace(/\s+/g,'')));
+                                    const excluded = exclude.length > 0 && exclude.some(ex => cleanKey.includes(ex.toLowerCase().replace(/\s+/g,'')));
+                                    return match && !excluded;
+                                });
+                                return k ? row[k] : '';
+                            };
+                            
+                            let fName = String(getValStrict(['farmername', 'farmer', 'ชื่อเกษตรกร'])).trim();
+                            if(!fName) { skippedCount++; return; }
 
-                            let fName = normalizeTextSmart(findCsvValue(row, keys, ['Farmer name','farmername','farmer','ชื่อเกษตรกร']));
-                            let rawArea = findCsvValue(row, keys, [' Planting Area(Rai)','Planting Area(Rai)','plantingarea','area','rai','พื้นที่','ไร่'], ['damage','harvest','เสียหาย','เกี่ยว','คงเหลือ']);
-                            let areaClean = normalizeArea(rawArea);
+                            rowCounter++; const r = rowCounter;
+                            
+                            let rawVar = '';
+                            let varKeys = keys.filter(k => {
+                                let cleanK = String(k).toLowerCase().replace(/\s+/g,'');
+                                return cleanK.includes('waxytype') || cleanK.includes('variety') || cleanK.includes('สายพันธุ์') || cleanK.includes('allwaxy');
+                            });
+                            for (let vk of varKeys) {
+                                if (row[vk] && String(row[vk]).trim() !== '') { rawVar = String(row[vk]).trim(); break; }
+                            }
+                            
+                            let cVar = rawVar;
+                            if (!isNaN(rawVar) && rawVar !== '') cVar = `HBwx${rawVar}`; 
+                            else if (rawVar.toLowerCase().includes('waxy')) cVar = 'Waxy';
+                            
+                            let areaRaw = String(getValStrict(['plantingarea', 'area', 'rai', 'พื้นที่', 'ไร่'], ['damage', 'harvest', 'เสียหาย', 'เกี่ยว', 'คงเหลือ'])).replace(/,/g, '').trim();
 
-                            // ข้ามเฉพาะแถวที่ว่างจริง ๆ เท่านั้น ไม่ข้ามเพราะชื่อซ้ำ
-                            if(!fName && !areaClean) { skippedCount++; return; }
-
-                            let rowAgro = normalizeTextSmart(findCsvValue(row, keys, ['Agronomist name','agronomistname','agronomist','ผู้ดูแล']));
+                            let rowAgro = String(getValStrict(['agronomistname', 'agronomist', 'ผู้ดูแล'])).trim();
                             if (!rowAgro && farmerToAgroMap[fName]) rowAgro = farmerToAgroMap[fName];
                             if (!rowAgro) rowAgro = document.getElementById('global-agronomist').value;
 
-                            let rawProv = findCsvValue(row, keys, ['Province','จังหวัด']);
-                            let rawDist = findCsvValue(row, keys, ['District','อำเภอ','อําเภอ']);
-                            let rawSub = findCsvValue(row, keys, ['local','Subdistrict','Sub district','Tambon','ตำบล','ตําบล','sub']);
-                            let prov = normalizeProvince(rawProv);
-                            let dist = normalizeDistrict(rawDist, prov);
-                            let sub = normalizeSubdistrict(rawSub, prov, dist);
-
-                            if (normalizeTextSmart(rawProv) !== prov || normalizeTextSmart(rawDist) !== dist || normalizeTextSmart(rawSub) !== sub) correctedCount++;
-
-                            let rawVar = findCsvValue(row, keys, ['Variety','All Waxy type','Waxy type 1','สายพันธุ์','variety','allwaxytype','waxytype1']);
-                            let rawIrrig = findCsvValue(row, keys, ['Irrigation system','irrigationsystem','irrigation','ระบบน้ำ']);
-                            let rawMonth = findCsvValue(row, keys, [' Planting Month','Planting Month','plantingmonth','month','เดือน'], ['harvest','เกี่ยว']);
-
                             let mapped = {
-                                agronomist: rowAgro,
-                                farmer: fName,
-                                tel: normalizePhone(findCsvValue(row, keys, ['Phone Number','Tel No.2','Tel','phone','เบอร์โทร','เบอร์','โทร'])),
-                                vendor: normalizeTextSmart(findCsvValue(row, keys, ['Vendor Code','vendorcode','vendor','รหัส'])),
-                                type: normalizeTextSmart(findCsvValue(row, keys, ['Farmer Type','farmertype','ประเภท'])) || 'Contract',
-                                prov: prov,
-                                dist: dist,
-                                sub: sub,
-                                irrig: normalizeIrrigation(rawIrrig),
-                                var: normalizeVariety(rawVar),
-                                area: areaClean,
-                                month: normalizeMonth(rawMonth)
+                                agronomist: rowAgro, farmer: fName, 
+                                tel: String(getValStrict(['tel', 'phone', 'เบอร์โทร', 'เบอร์', 'โทร'])).trim(),
+                                vendor: String(getValStrict(['vendorcode', 'vendor', 'รหัส'])).trim(),
+                                type: String(getValStrict(['farmertype', 'type', 'ประเภท'])) || 'Contract',
+                                prov: String(getValStrict(['province', 'จังหวัด'])).trim(),
+                                dist: String(getValStrict(['district', 'อำเภอ'])).trim(),
+                                sub: String(getValStrict(['subdistrict', 'local', 'ตำบล', 'sub'])).trim(),
+                                irrig: String(getValStrict(['irrigationsystem', 'irrigation', 'ระบบน้ำ'])) || 'Rainfade',
+                                var: cVar, area: parseFloat(areaRaw) || '', 
+                                month: String(getValStrict(['plantingmonth', 'month', 'เดือน'], ['harvest', 'เกี่ยว'])).trim()
                             };
-
-                            const missingFields = requiredForUpload.filter(k => !mapped[k]);
-                            if (missingFields.length > 0) {
-                                importIssues.push(`แถว ${sourceRow}: ข้อมูลไม่ครบ (${missingFields.join(', ')})`);
-                            }
-
-                            rowCounter++; const r = rowCounter;
-                            const tr = document.createElement('tr');
-                            tr.id = `row-${r}`;
-                            tr.className = "hover:bg-slate-50 transition-colors group";
-                            tr.innerHTML = createRowHTML(r, mapped);
-                            document.getElementById('table-body').appendChild(tr);
-
-                            // เติม dropdown ตาม Master Data อีกครั้ง เพื่อให้จังหวัด/อำเภอ/ตำบลที่แก้คำผิดเลือกได้จริง
-                            updateDistricts(r, mapped.dist);
-                            updateSubDistricts(r, mapped.sub);
-                            document.getElementById(`prov-${r}`).value = mapped.prov;
-                            document.getElementById(`dist-${r}`).value = mapped.dist;
-                            document.getElementById(`sub-${r}`).value = mapped.sub;
-                            const st = validateRow(r);
-                            if(st.hasError) errCnt++; if(st.hasWarning) warnCnt++;
-                        } catch(err) {
-                            skippedCount++;
-                            importIssues.push(`แถว ${index + 2}: อ่านข้อมูลไม่ได้ (${err.message})`);
-                        }
+                            
+                            const tr = document.createElement('tr'); tr.id=`row-${r}`; tr.className = "hover:bg-slate-50 transition-colors group";
+                            tr.innerHTML=createRowHTML(r, mapped); document.getElementById('table-body').appendChild(tr);
+                            
+                            updateDistricts(r, mapped.dist); updateSubDistricts(r, mapped.sub);
+                            const st = validateRow(r); 
+                            if(st.hasError) eCnt++; if(st.hasWarning) wCnt++;
+                        } catch(err) { skippedCount++; }
                     });
-
-                    updateRowCount();
-                    document.getElementById('import-csv-file').value = '';
-
-                    let reportMsg = `ดึงข้อมูลสำเร็จ ${rowCounter} รายการ`;
-                    if (correctedCount > 0) reportMsg += `\n✅ แก้คำผิด/รูปแบบจังหวัด-อำเภอ-ตำบลอัตโนมัติ ${correctedCount} แถว`;
-                    if (skippedCount > 0) reportMsg += `\nข้ามแถวว่าง/อ่านไม่ได้ ${skippedCount} แถว`;
-                    if (errCnt > 0 || importIssues.length > 0) reportMsg += `\n⚠️ ยังมีข้อมูลต้องตรวจ ${errCnt} จุด`;
-                    if (warnCnt > 0) reportMsg += `\nชื่อซ้ำในระบบ ${warnCnt} จุด (ไม่บล็อกการบันทึก)`;
-
-                    console.group('CSV Import Validation Report');
-                    console.log({ importedRows: rowCounter, skippedCount, correctedCount, errCnt, warnCnt });
-                    console.table(importIssues.slice(0, 100).map(msg => ({ issue: msg })));
-                    console.groupEnd();
-
-                    if(errCnt > 0 || importIssues.length > 0) showToast(reportMsg + '\nดูรายละเอียดเพิ่มเติมใน Console', 'warning');
+                    
+                    updateRowCount(); document.getElementById('import-csv-file').value = '';
+                    let reportMsg = `ดึงข้อมูลสำเร็จ ${rowCounter} รายการ `;
+                    if(skippedCount > 0) reportMsg += `\n(ข้ามบรรทัดว่าง/ข้อมูลขยะ ${skippedCount} รายการ) `;
+                    if(eCnt > 0 || wCnt > 0) reportMsg += `\n⚠️ พบจุดที่ต้องแก้ไข ${eCnt} จุด, ชื่อซ้ำ ${wCnt} จุด`;
+                    
+                    if(eCnt>0 || wCnt>0) showToast(reportMsg, 'warning');
                     else if (rowCounter > 0) showToast(reportMsg, 'success');
-                    else showToast('ไม่พบข้อมูลที่ตรงกับแบบฟอร์มในไฟล์นี้', 'error');
+                    else showToast(`ไม่พบข้อมูลที่ตรงกับแบบฟอร์มในไฟล์นี้เลย`, 'error');
                 }
             });
         }
@@ -2039,51 +1900,20 @@
             const ss = document.getElementById('global-season').value;
             const rows = document.getElementById('table-body').children;
             let dataArr = [];
-            let missingReport = [];
-
             for (let tr of rows) {
                 const id = tr.id.split('-')[1];
-                const f = normalizeTextSmart(document.getElementById(`farmer-${id}`).value);
-                const a = normalizeArea(document.getElementById(`area-${id}`).value);
-                if (!f && !a) continue;
-
-                const rowAgro = normalizeTextSmart(document.getElementById(`agro-${id}`).value || document.getElementById('global-agronomist').value);
-                const rowData = {
-                    agronomist: rowAgro,
-                    farmer: f,
-                    tel: normalizePhone(document.getElementById(`tel-${id}`).value),
-                    vendor: normalizeTextSmart(document.getElementById(`vendor-${id}`).value),
-                    type: normalizeTextSmart(document.getElementById(`type-${id}`).value) || 'Contract',
-                    prov: normalizeProvince(document.getElementById(`prov-${id}`).value),
-                    dist: normalizeDistrict(document.getElementById(`dist-${id}`).value, document.getElementById(`prov-${id}`).value),
-                    sub: normalizeSubdistrict(document.getElementById(`sub-${id}`).value, document.getElementById(`prov-${id}`).value, document.getElementById(`dist-${id}`).value),
-                    irrig: normalizeIrrigation(document.getElementById(`irrig-${id}`).value),
-                    var: normalizeVariety(document.getElementById(`var-${id}`).value),
-                    area: a,
-                    month: normalizeMonth(document.getElementById(`month-${id}`).value)
-                };
-
-                const required = [
-                    ['agronomist','ผู้ดูแล'], ['farmer','ชื่อเกษตรกร'], ['prov','จังหวัด'], ['dist','อำเภอ'], ['sub','ตำบล'],
-                    ['irrig','ระบบน้ำ'], ['var','สายพันธุ์'], ['area','พื้นที่'], ['month','เดือนปลูก']
-                ];
-                const missing = required.filter(([k]) => !rowData[k]).map(([,label]) => label);
-                if (missing.length > 0) {
-                    missingReport.push(`แถว ${id}: ${missing.join(', ')}`);
-                    missing.forEach(label => {
-                        const map = {'ชื่อเกษตรกร':'farmer','จังหวัด':'prov','อำเภอ':'dist','ตำบล':'sub','สายพันธุ์':'var','พื้นที่':'area','เดือนปลูก':'month'};
-                        const el = document.getElementById(`${map[label]}-${id}`);
-                        if (el) el.classList.add('input-error');
-                    });
-                    continue;
-                }
-                dataArr.push(rowData);
-            }
-
-            if(missingReport.length > 0) {
-                showToast(`พบข้อมูลไม่ครบ ${missingReport.length} แถว\n${missingReport.slice(0,5).join('\n')}${missingReport.length>5?'\n...':''}`, 'error');
-                console.table(missingReport.map(x => ({issue: x})));
-                return null;
+                const f = document.getElementById(`farmer-${id}`).value, a = document.getElementById(`area-${id}`).value;
+                if (!f && !a) continue; if(!f||!a) { alert("ข้อมูลไม่ครบ"); return null; }
+                
+                const rowAgro = document.getElementById(`agro-${id}`).value || document.getElementById('global-agronomist').value;
+                
+                dataArr.push({ 
+                    agronomist: rowAgro, farmer:f, 
+                    tel:document.getElementById(`tel-${id}`).value,
+                    vendor:document.getElementById(`vendor-${id}`).value, type:document.getElementById(`type-${id}`).value, 
+                    prov:document.getElementById(`prov-${id}`).value, dist:document.getElementById(`dist-${id}`).value, sub:document.getElementById(`sub-${id}`).value, 
+                    irrig:document.getElementById(`irrig-${id}`).value, var:document.getElementById(`var-${id}`).value, area:a, month:document.getElementById(`month-${id}`).value 
+                });
             }
             if(dataArr.length===0) return null;
             const payload = { action: "INSERT_BATCH", user: currentUser, agronomist: document.getElementById('global-agronomist').value, season: ss, records: dataArr };
