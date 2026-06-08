@@ -284,6 +284,33 @@
                     </button>
                 </div>
 
+
+
+                <div id="pf-summary-panel" class="bg-blue-50/60 border-b border-blue-100 px-4 py-3 shrink-0">
+                    <div class="flex items-center justify-between gap-3 mb-2">
+                        <h3 class="text-sm font-bold text-blue-700 flex items-center"><i class="fa-solid fa-chart-pie mr-2"></i> สรุปข้อมูลตามตัวกรอง</h3>
+                        <span class="text-[11px] text-blue-600/70">อัปเดตอัตโนมัติเมื่อเลือกตัวกรอง</span>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div class="bg-white rounded-xl border border-blue-100 p-3 shadow-sm">
+                            <div class="text-[11px] text-slate-500">จำนวนรายการ</div>
+                            <div id="pf-summary-count" class="text-lg font-black text-slate-800">0</div>
+                        </div>
+                        <div class="bg-white rounded-xl border border-blue-100 p-3 shadow-sm">
+                            <div class="text-[11px] text-slate-500">พื้นที่ปลูกรวม</div>
+                            <div class="text-lg font-black text-brand"><span id="pf-summary-area">0</span> <span class="text-xs font-bold">ไร่</span></div>
+                        </div>
+                        <div class="bg-white rounded-xl border border-red-100 p-3 shadow-sm">
+                            <div class="text-[11px] text-slate-500">พื้นที่เสียหายรวม</div>
+                            <div class="text-lg font-black text-red-600"><span id="pf-summary-damage">0</span> <span class="text-xs font-bold">ไร่</span></div>
+                        </div>
+                        <div class="bg-white rounded-xl border border-emerald-100 p-3 shadow-sm">
+                            <div class="text-[11px] text-slate-500">พื้นที่คงเหลือสุทธิ</div>
+                            <div class="text-lg font-black text-emerald-600"><span id="pf-summary-active">0</span> <span class="text-xs font-bold">ไร่</span></div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="flex-1 overflow-auto p-0 relative">
                     <table class="w-full text-left border-collapse min-w-[1100px]">
                         <thead class="bg-slate-50 text-slate-600 text-[11px] uppercase font-bold tracking-wider sticky top-0 z-10 shadow-sm border-b border-slate-200">
@@ -347,6 +374,33 @@
                     <button onclick="resetDmFilters()" class="text-xs font-medium text-slate-500 hover:text-damage border border-slate-200 rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center">
                         <i class="fa-solid fa-rotate-right mr-1.5"></i> ล้างตัวกรอง
                     </button>
+                </div>
+
+
+
+                <div id="dm-summary-panel" class="bg-red-50/60 border-b border-red-100 px-4 py-3 shrink-0">
+                    <div class="flex items-center justify-between gap-3 mb-2">
+                        <h3 class="text-sm font-bold text-damage flex items-center"><i class="fa-solid fa-chart-pie mr-2"></i> สรุปข้อมูลตามตัวกรอง</h3>
+                        <span class="text-[11px] text-red-600/70">อัปเดตอัตโนมัติเมื่อเลือกตัวกรอง</span>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div class="bg-white rounded-xl border border-red-100 p-3 shadow-sm">
+                            <div class="text-[11px] text-slate-500">จำนวนรายการ</div>
+                            <div id="dm-summary-count" class="text-lg font-black text-slate-800">0</div>
+                        </div>
+                        <div class="bg-white rounded-xl border border-red-100 p-3 shadow-sm">
+                            <div class="text-[11px] text-slate-500">พื้นที่ปลูกรวม</div>
+                            <div class="text-lg font-black text-brand"><span id="dm-summary-area">0</span> <span class="text-xs font-bold">ไร่</span></div>
+                        </div>
+                        <div class="bg-white rounded-xl border border-red-100 p-3 shadow-sm">
+                            <div class="text-[11px] text-slate-500">พื้นที่เสียหายรวม</div>
+                            <div class="text-lg font-black text-damage"><span id="dm-summary-damage">0</span> <span class="text-xs font-bold">ไร่</span></div>
+                        </div>
+                        <div class="bg-white rounded-xl border border-emerald-100 p-3 shadow-sm">
+                            <div class="text-[11px] text-slate-500">พื้นที่คงเหลือสุทธิ</div>
+                            <div class="text-lg font-black text-emerald-600"><span id="dm-summary-active">0</span> <span class="text-xs font-bold">ไร่</span></div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="flex-1 overflow-auto p-0 relative">
@@ -416,6 +470,37 @@
                     <button onclick="resetHvFilters()" class="text-xs font-medium text-slate-500 hover:text-harvest border border-slate-200 rounded-lg hover:bg-orange-50 transition-colors flex items-center justify-center">
                         <i class="fa-solid fa-rotate-right mr-1.5"></i> ล้างตัวกรอง
                     </button>
+                </div>
+
+
+
+                <div id="hv-summary-panel" class="bg-amber-50/60 border-b border-amber-100 px-4 py-3 shrink-0">
+                    <div class="flex items-center justify-between gap-3 mb-2">
+                        <h3 class="text-sm font-bold text-harvest flex items-center"><i class="fa-solid fa-chart-pie mr-2"></i> สรุปข้อมูลตามตัวกรอง</h3>
+                        <span class="text-[11px] text-amber-700/70">อัปเดตอัตโนมัติเมื่อเลือกตัวกรอง</span>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                        <div class="bg-white rounded-xl border border-amber-100 p-3 shadow-sm">
+                            <div class="text-[11px] text-slate-500">จำนวนรายการ</div>
+                            <div id="hv-summary-count" class="text-lg font-black text-slate-800">0</div>
+                        </div>
+                        <div class="bg-white rounded-xl border border-amber-100 p-3 shadow-sm">
+                            <div class="text-[11px] text-slate-500">พื้นที่จริงรวม</div>
+                            <div class="text-lg font-black text-brand"><span id="hv-summary-active">0</span> <span class="text-xs font-bold">ไร่</span></div>
+                        </div>
+                        <div class="bg-white rounded-xl border border-amber-100 p-3 shadow-sm">
+                            <div class="text-[11px] text-slate-500">เก็บเกี่ยวแล้ว</div>
+                            <div class="text-lg font-black text-harvest"><span id="hv-summary-harvested">0</span> <span class="text-xs font-bold">ไร่</span></div>
+                        </div>
+                        <div class="bg-white rounded-xl border border-emerald-100 p-3 shadow-sm">
+                            <div class="text-[11px] text-slate-500">พื้นที่คงเหลือ</div>
+                            <div class="text-lg font-black text-emerald-600"><span id="hv-summary-remaining">0</span> <span class="text-xs font-bold">ไร่</span></div>
+                        </div>
+                        <div class="bg-white rounded-xl border border-amber-100 p-3 shadow-sm">
+                            <div class="text-[11px] text-slate-500">ผลผลิตรวม</div>
+                            <div class="text-lg font-black text-slate-800"><span id="hv-summary-tons">0</span> <span class="text-xs font-bold">ตัน</span></div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="flex-1 overflow-auto p-0 relative">
@@ -1333,6 +1418,50 @@
             link.click(); document.body.removeChild(link);
         }
 
+
+
+        // --- SUMMARY PANELS: update totals under filters ---
+        function formatSummaryNumber(value) {
+            const num = Number(value) || 0;
+            return num.toLocaleString('th-TH', { maximumFractionDigits: 1 });
+        }
+
+        function sumField(data, fieldName) {
+            return data.reduce((sum, row) => sum + (parseFloat(row[fieldName]) || 0), 0);
+        }
+
+        function updateFilterSummary(prefix, data) {
+            const safeData = Array.isArray(data) ? data : [];
+            const setText = (id, value) => {
+                const el = document.getElementById(id);
+                if (el) el.innerText = formatSummaryNumber(value);
+            };
+
+            const totalArea = sumField(safeData, 'area');
+            const damagedArea = sumField(safeData, 'damagedarea');
+            const harvestedArea = sumField(safeData, 'harvestedarea');
+            const tons = sumField(safeData, 'tons');
+            const activeArea = safeData.reduce((sum, row) => {
+                const area = parseFloat(row.area) || 0;
+                const damage = parseFloat(row.damagedarea) || 0;
+                return sum + Math.max(0, area - damage);
+            }, 0);
+            const remainingHarvestArea = safeData.reduce((sum, row) => {
+                const area = parseFloat(row.area) || 0;
+                const damage = parseFloat(row.damagedarea) || 0;
+                const harvested = parseFloat(row.harvestedarea) || 0;
+                return sum + Math.max(0, area - damage - harvested);
+            }, 0);
+
+            setText(`${prefix}-summary-count`, safeData.length);
+            setText(`${prefix}-summary-area`, totalArea);
+            setText(`${prefix}-summary-damage`, damagedArea);
+            setText(`${prefix}-summary-active`, activeArea);
+            setText(`${prefix}-summary-harvested`, harvestedArea);
+            setText(`${prefix}-summary-remaining`, remainingHarvestArea);
+            setText(`${prefix}-summary-tons`, tons);
+        }
+
         function processProfileData(data) {
             myPlotsData = data.filter(row => isMyPlot(row));
             initTabFilters('pf');
@@ -1369,6 +1498,7 @@
                 if(fAgro !== 'All') match = match && String(r.agronomist).includes(fAgro);
                 return match;
             });
+            updateFilterSummary('pf', filtered);
             renderProfileTable(filtered);
         }
 
@@ -1623,6 +1753,7 @@
                 if(fAgro !== 'All') match = match && String(r.agronomist).includes(fAgro);
                 return match;
             });
+            updateFilterSummary('dm', filtered);
             renderDamageTable(filtered);
         }
 
@@ -1722,6 +1853,7 @@
 
                 return match;
             });
+            updateFilterSummary('hv', filtered);
             renderHarvestTable(filtered);
         }
 
