@@ -1,0 +1,76 @@
+﻿workbook,sheet,csvPath,rows,columns,nonEmptyCells
+KSN Root Sourcing report App.xlsx,RawKPI.KSN,data/csv/by_sheet/KSN_Root_Sourcing_report_App.xlsx/RawKPI.KSN.csv,49,20,980
+KSN Root Sourcing report App.xlsx,Volume.KSN,data/csv/by_sheet/KSN_Root_Sourcing_report_App.xlsx/Volume.KSN.csv,49,5,231
+KSN Root Sourcing report App.xlsx,RegRoot.KSN,data/csv/by_sheet/KSN_Root_Sourcing_report_App.xlsx/RegRoot.KSN.csv,7285,14,101989
+KSN Root Sourcing report App.xlsx,Name.KSN,data/csv/by_sheet/KSN_Root_Sourcing_report_App.xlsx/Name.KSN.csv,684,5,3420
+KSN Root Sourcing report App.xlsx,Year.KSN,data/csv/by_sheet/KSN_Root_Sourcing_report_App.xlsx/Year.KSN.csv,5,2,10
+KSN Root Sourcing report App.xlsx,Month.KSN,data/csv/by_sheet/KSN_Root_Sourcing_report_App.xlsx/Month.KSN.csv,13,2,26
+SK Root Sourcing report App.xlsx,RawKPI.SK,data/csv/by_sheet/SK_Root_Sourcing_report_App.xlsx/RawKPI.SK.csv,49,17,833
+SK Root Sourcing report App.xlsx,RegRoot.SK,data/csv/by_sheet/SK_Root_Sourcing_report_App.xlsx/RegRoot.SK.csv,7592,14,106182
+SK Root Sourcing report App.xlsx,VolFarmerContri.SK,data/csv/by_sheet/SK_Root_Sourcing_report_App.xlsx/VolFarmerContri.SK.csv,49,5,245
+SK Root Sourcing report App.xlsx,Name.SK,data/csv/by_sheet/SK_Root_Sourcing_report_App.xlsx/Name.SK.csv,1012,5,5060
+SK Root Sourcing report App.xlsx,Year.SK,data/csv/by_sheet/SK_Root_Sourcing_report_App.xlsx/Year.SK.csv,5,2,10
+SK Root Sourcing report App.xlsx,Month.SK,data/csv/by_sheet/SK_Root_Sourcing_report_App.xlsx/Month.SK.csv,13,2,26
+Market situation.xlsx,Tapioca Starch Price_1,data/csv/by_sheet/Market_situation.xlsx/Tapioca_Starch_Price_1.csv,485,604,1989
+Market situation.xlsx,Tapioca Production_1,data/csv/by_sheet/Market_situation.xlsx/Tapioca_Production_1.csv,25,6,116
+Market situation.xlsx,Tapioca Chip Price_1,data/csv/by_sheet/Market_situation.xlsx/Tapioca_Chip_Price_1.csv,91,5,317
+Market situation.xlsx,Ethanol Price_1,data/csv/by_sheet/Market_situation.xlsx/Ethanol_Price_1.csv,95,5,181
+Market situation.xlsx,Dry Pulp Monthly price_1,data/csv/by_sheet/Market_situation.xlsx/Dry_Pulp_Monthly_price_1.csv,30,2,59
+Market situation.xlsx,Dry Pulp Daily price_1,data/csv/by_sheet/Market_situation.xlsx/Dry_Pulp_Daily_price_1.csv,648,6,2222
+Market situation.xlsx,LE02026 cost LV11022026_Origi,data/csv/by_sheet/Market_situation.xlsx/LE02026_cost_LV11022026_Origi.csv,40,18,375
+Market situation.xlsx,LV02.04.2026 cost_Origi,data/csv/by_sheet/Market_situation.xlsx/LV02.04.2026_cost_Origi.csv,42,18,408
+Market situation.xlsx,SK ST+Price+PPDS+Farmer_Origi.,data/csv/by_sheet/Market_situation.xlsx/SK_ST+Price+PPDS+Farmer_Origi..csv,80,14,853
+Market situation.xlsx,KSN ST+Price+PPDS+Farmer_Origi,data/csv/by_sheet/Market_situation.xlsx/KSN_ST+Price+PPDS+Farmer_Origi.csv,63,14,733
+Market situation.xlsx,Planner 1.4.2026,data/csv/by_sheet/Market_situation.xlsx/Planner_1.4.2026.csv,23,22,383
+Market situation.xlsx,Planner 29.4.2026,data/csv/by_sheet/Market_situation.xlsx/Planner_29.4.2026.csv,23,22,383
+Market situation.xlsx,LV02.04.2026 cost+ Act.,data/csv/by_sheet/Market_situation.xlsx/LV02.04.2026_cost+_Act..csv,42,18,406
+Market situation.xlsx,SK ST+Price+PPDS_LV02.04.2026,data/csv/by_sheet/Market_situation.xlsx/SK_ST+Price+PPDS_LV02.04.2026.csv,80,33,901
+Market situation.xlsx,KSN ST+Price+PPDS_LV02.04.2026,data/csv/by_sheet/Market_situation.xlsx/KSN_ST+Price+PPDS_LV02.04.2026.csv,63,14,734
+Market situation.xlsx,Summary plan 11.02.26,data/csv/by_sheet/Market_situation.xlsx/Summary_plan_11.02.26.csv,23,22,381
+Market situation.xlsx,SK MAP - Mar 2026  (2),data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_Mar_2026_(2).csv,39,14,101
+Market situation.xlsx,SK MAP - Mar 2026 _22.02.2026,data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_Mar_2026__22.02.2026.csv,39,14,104
+Market situation.xlsx,SK MAP - Apr 2026 (2),data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_Apr_2026_(2).csv,39,14,92
+Market situation.xlsx,SK MAP - Apr 2026 _ 26.03.2026,data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_Apr_2026___26.03.2026.csv,39,14,85
+Market situation.xlsx,SK MAP - May 2026 (2),data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_May_2026_(2).csv,39,14,92
+Market situation.xlsx,SK MAP - May 2026 _ 26.03.2026,data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_May_2026___26.03.2026.csv,39,14,80
+Market situation.xlsx,SK MAP - May 2026 _ 24.04.26,data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_May_2026___24.04.26.csv,39,14,85
+Market situation.xlsx,SK MAP - Jun 2026 (2),data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_Jun_2026_(2).csv,39,14,92
+Market situation.xlsx,SK MAP -June 2026 _ 26.03.2026,data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-June_2026___26.03.2026.csv,39,14,76
+Market situation.xlsx,SK MAP - May 2026Rev01 5.5.2026,data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_May_2026Rev01_5.5.2026.csv,39,14,85
+Market situation.xlsx,SK MAP - Jul 2026 (2),data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_Jul_2026_(2).csv,39,14,92
+Market situation.xlsx,SK MAP -July 2026 _ 26.03.26,data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-July_2026___26.03.26.csv,39,14,76
+Market situation.xlsx,SK MAP - Aug 2026 (2),data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_Aug_2026_(2).csv,39,14,92
+Market situation.xlsx,SK MAP -Aug 2026 _ 26.03.26,data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-Aug_2026___26.03.26.csv,39,14,76
+Market situation.xlsx,SK MAP - Sep 26 (2),data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_Sep_26_(2).csv,39,14,92
+Market situation.xlsx,SK MAP -Sep 2026 _ 26.03.26 ,data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-Sep_2026___26.03.26.csv,39,14,76
+Market situation.xlsx,SK MAP - Oct 26 (2),data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_Oct_26_(2).csv,39,14,92
+Market situation.xlsx,SK MAP -Oct 2026 _ 26.03.26,data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-Oct_2026___26.03.26.csv,39,14,76
+Market situation.xlsx,SK MAP - Nov 26 (2),data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_Nov_26_(2).csv,39,16,93
+Market situation.xlsx,SK MAP -Nov 2026 _ 26.03.26,data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-Nov_2026___26.03.26.csv,39,14,76
+Market situation.xlsx,SK MAP - Dec 26  (2),data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_Dec_26_(2).csv,39,16,93
+Market situation.xlsx,SK MAP -Dec 2026 _ 26.03.26 ,data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-Dec_2026___26.03.26.csv,39,14,76
+Market situation.xlsx,KSN MAP - Mar 2026 (2),data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Mar_2026_(2).csv,42,14,103
+Market situation.xlsx,KSN MAP - Mar 2026 _ 22.02.2026,data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Mar_2026___22.02.2026.csv,43,14,107
+Market situation.xlsx,KSN MAP - Apr 2026 (2),data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Apr_2026_(2).csv,42,14,94
+Market situation.xlsx,KSN MAP - Apr 2026 _ 26.03.206,data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Apr_2026___26.03.206.csv,43,14,87
+Market situation.xlsx,KSN MAP - Apr 2026 Rev1-2.04.26,data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Apr_2026_Rev1-2.04.26.csv,43,14,87
+Market situation.xlsx,KSN MAP - May 2026 (2),data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_May_2026_(2).csv,42,14,94
+Market situation.xlsx,KSN MAP - May 2026_02.04.26,data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_May_2026_02.04.26.csv,42,14,94
+Market situation.xlsx,KSN MAP - May 2026_24.04.26,data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_May_2026_24.04.26.csv,42,14,100
+Market situation.xlsx,KSN MAP - Jun 2026 (2),data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Jun_2026_(2).csv,42,14,94
+Market situation.xlsx,KSN MAP - Jun 2026_02.04.26,data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Jun_2026_02.04.26.csv,42,14,94
+Market situation.xlsx,KSN MAP - May 2026Rev01_5.5.206,data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_May_2026Rev01_5.5.206.csv,42,14,98
+Market situation.xlsx,KSN MAP - Jul 2026 (2),data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Jul_2026_(2).csv,42,14,94
+Market situation.xlsx,KSN MAP - Jul 2026_02.04.26,data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Jul_2026_02.04.26.csv,42,14,94
+Market situation.xlsx,KSN MAP - Aug 2026 (2),data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Aug_2026_(2).csv,42,14,94
+Market situation.xlsx,KSN MAP - Aug 2026_02.04.26,data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Aug_2026_02.04.26.csv,42,14,94
+Market situation.xlsx,KSN MAP - Sep 2026 (2),data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Sep_2026_(2).csv,42,14,94
+Market situation.xlsx,KSN MAP - Sep 2026 _02.04.26,data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Sep_2026__02.04.26.csv,42,14,94
+Market situation.xlsx,KSN MAP - Oct 2026 (2),data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Oct_2026_(2).csv,42,14,94
+Market situation.xlsx,KSN MAP - Oct 2026_02.04.26,data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Oct_2026_02.04.26.csv,42,14,94
+Market situation.xlsx,KSN MAP - Nov 2026  (2),data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Nov_2026_(2).csv,42,16,95
+Market situation.xlsx,KSN MAP - Nov 2026 _02.04.26,data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Nov_2026__02.04.26.csv,42,16,95
+Market situation.xlsx,KSN MAP - Dec 2026 (2),data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Dec_2026_(2).csv,42,16,95
+Market situation.xlsx,KSN MAP - Dec 2026 _02.04.26,data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Dec_2026__02.04.26.csv,42,16,95
+ST_PPDS_Price template.xlsx,SK ST+Price+PPDS _template,data/csv/by_sheet/ST_PPDS_Price_template.xlsx/SK_ST+Price+PPDS__template.csv,47,10,80
+ST_PPDS_Price template.xlsx,KSN ST+Price+PPDS _template,data/csv/by_sheet/ST_PPDS_Price_template.xlsx/KSN_ST+Price+PPDS__template.csv,47,11,80
