@@ -1,113 +1,80 @@
-# System Design — Root Sourcing Dashboard for GitHub Pages
+# System Design
 
-## Objective
+## Goal
 
-Create a static interactive dashboard that uses all attached Excel workbooks and can be published directly on GitHub Pages without a backend.
+Create a GitHub Pages-ready static dashboard that can display sourcing, KPI, volume, market, and raw sheet data without requiring a backend server.
 
 ## Architecture
 
 ```text
-Excel Workbooks
-   ↓ tools/convert_excel_to_json.py
-Compact JSON dataset
-   ↓ fetched by index.html
-Interactive Dashboard on GitHub Pages
+Source Excel files
+  └── data/source_excel/*.xlsx
+        ↓
+Python converter
+  └── tools/convert_excel_to_json.py
+        ↓
+Main data file
+  └── data/dashboard_data.json
+        ↓
+Interactive dashboard
+  └── index.html + Chart.js + Tailwind CSS
 ```
 
-## Data pipeline
+## Data layers
 
-### 1. Excel extraction
+### 1. Source layer
 
-The converter reads `.xlsx` OpenXML contents directly and exports a compact JSON dataset. It extracts:
+Original workbooks are stored in:
 
-- Raw workbook sheet matrices for all sheets.
-- Normalized root sourcing transactions from `RegRoot.SK` and `RegRoot.KSN`.
-- Monthly KPI rows from `RawKPI.SK` and `RawKPI.KSN`.
-- Farmer/broker volume contribution from `VolFarmerContri.SK` and `Volume.KSN`.
-- Vendor master rows from `Name.SK` and `Name.KSN`.
-- Market series from starch, chip, ethanol, dry pulp, and production sheets.
+```text
+data/source_excel/
+```
 
-### 2. Static dataset
+### 2. Audit layer
 
-The generated dataset is stored at:
+Every relevant table and every original sheet is exported to CSV:
+
+```text
+data/csv/
+data/csv/by_sheet/
+```
+
+This prevents data loss because any missing value can be traced back to a source workbook and sheet.
+
+### 3. Application layer
+
+The dashboard reads:
 
 ```text
 data/dashboard_data.json
 ```
 
-This file is loaded by the browser using `fetch()`.
-
-### 3. Frontend dashboard
-
-`index.html` uses:
-
-- Tailwind CSS for layout and styling.
-- Chart.js for interactive charts.
-- Native JavaScript for filtering, aggregation, export, pagination, and sheet exploration.
+This single JSON file is faster and safer for GitHub Pages than loading multiple Excel files in the browser.
 
 ## Dashboard modules
 
-### Overview
+- Executive KPI cards
+- Plant comparison: Sikhiu vs Kalasin
+- PPDS / Price / Starch trend
+- Volume contribution by vendor type
+- Market situation charts
+- Sheet explorer for all workbooks and all sheets
+- Data quality panel
+- Searchable detail table
 
-- Total Volume (MT)
-- Weighted Starch (%)
-- Average Price (THB/kg)
-- Weighted PPDS
-- Unique Vendors
-- Monthly volume by plant
-- KPI trend: PPDS, price, starch
-- Vendor type contribution
-- Top provinces and vendors
+## Data quality design
 
-### Sourcing Details
-
-- Volume by broker/farmer/regular roots
-- Area insights by plant, district, and root type
-- Paginated transaction table
-- CSV export for filtered records
-
-### Market Situation
-
-- Tapioca starch price
-- Tapioca chip price
-- Ethanol price
-- Dry pulp price
-- Thailand tapioca production and yield
-
-### Sheet Explorer
-
-- Workbook selector
-- Sheet selector
-- Search within sheet
-- Column display limit
-- Full CSV export per selected sheet
-
-### Data Quality
-
-- Required field completeness
-- Sheet coverage table
-- Notes on calculations and assumptions
-
-## Calculation logic
-
-| Metric | Formula |
-|---|---|
-| Total Volume | `sum(Volume MT)` |
-| Weighted Starch | `sum(Weigh starch) / sum(Volume kg)` |
-| Average Price | `sum(Amount) / sum(Volume kg)` |
-| Weighted PPDS | `sum(Amount) / sum(Weigh starch)` |
-| Unique Vendors | Distinct vendor names after filters |
-
-## GitHub Pages deployment
-
-The dashboard is designed as a single-page static site. Required files for deployment:
+The system separates PPDS data into four classes:
 
 ```text
-index.html
-data/dashboard_data.json
-tools/convert_excel_to_json.py
-README.md
-SYSTEM_DESIGN.md
+Complete PPDS
+Missing PPDS
+Zero PPDS
+Critical missing PPDS
 ```
 
-No server, database, API key, or build tool is required.
+Critical missing PPDS means PPDS is blank while volume, amount, or price exists. These rows should be reviewed before publishing.
+
+## Why JSON + CSV instead of Excel in browser
+
+The dashboard does not read Excel directly because browser-side Excel loading is slower and more fragile. JSON is used for dashboard performance, while CSV is used for audit and manual review.

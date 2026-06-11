@@ -379,9 +379,184 @@ def build_dataset(base_dir: Path, out_path: Path) -> Dict[str, Any]:
     out_path.write_text(json.dumps(dataset, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
     return dataset
 
+# -----------------------------------------------------------------------------
+# Production helpers: CSV exports, manifest, and data-quality reports
+# -----------------------------------------------------------------------------
+def safe_filename(value: Any) -> str:
+    text = str(value or 'sheet').strip()
+    text = re.sub(r'[\\/:*?"<>|]+', '_', text)
+    text = re.sub(r'\s+', '_', text)
+    return (text[:120] or 'sheet')
+
+
+def collect_headers(rows: List[Dict[str, Any]]) -> List[str]:
+    headers: List[str] = []
+    seen = set()
+    for row in rows:
+        for key in row.keys():
+            if key not in seen:
+                headers.append(key)
+                seen.add(key)
+    return headers
+
+
+def write_dict_csv(path: Path, rows: List[Dict[str, Any]], headers: List[str] | None = None) -> None:
+    import csv
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if headers is None:
+        headers = collect_headers(rows) if rows else []
+    with path.open('w', encoding='utf-8-sig', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=headers, extrasaction='ignore')
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({h: '' if row.get(h) is None else row.get(h) for h in headers})
+
+
+def write_matrix_csv(path: Path, rows: List[List[Any]]) -> None:
+    import csv
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open('w', encoding='utf-8-sig', newline='') as f:
+        writer = csv.writer(f)
+        for row in rows:
+            writer.writerow(['' if v is None else v for v in row])
+
+
+def export_csv_files(dataset: Dict[str, Any], project_root: Path) -> List[Dict[str, Any]]:
+    csv_dir = project_root / 'data' / 'csv'
+    records = dataset.get('sourcing', {}).get('records', [])
+    kpis = dataset.get('sourcing', {}).get('kpis', [])
+    volumes = dataset.get('sourcing', {}).get('volumes', [])
+    names = dataset.get('sourcing', {}).get('names', [])
+
+    write_dict_csv(csv_dir / 'sourcing_records_all.csv', records)
+    write_dict_csv(csv_dir / 'sk_regroot.csv', [r for r in records if r.get('plant') == 'Sikhiu'])
+    write_dict_csv(csv_dir / 'ksn_regroot.csv', [r for r in records if r.get('plant') == 'Kalasin'])
+    write_dict_csv(csv_dir / 'kpi_monthly_all.csv', kpis)
+    write_dict_csv(csv_dir / 'sk_kpi_monthly.csv', [r for r in kpis if r.get('plant') == 'Sikhiu'])
+    write_dict_csv(csv_dir / 'ksn_kpi_monthly.csv', [r for r in kpis if r.get('plant') == 'Kalasin'])
+    write_dict_csv(csv_dir / 'volume_contribution_all.csv', volumes)
+    write_dict_csv(csv_dir / 'sk_volume_contribution.csv', [r for r in volumes if r.get('plant') == 'Sikhiu'])
+    write_dict_csv(csv_dir / 'ksn_volume_contribution.csv', [r for r in volumes if r.get('plant') == 'Kalasin'])
+    write_dict_csv(csv_dir / 'vendor_master_all.csv', names)
+
+    for market_key, rows in dataset.get('market', {}).items():
+        if isinstance(rows, list):
+            write_dict_csv(csv_dir / f'market_{safe_filename(market_key)}.csv', rows)
+
+    sheet_index: List[Dict[str, Any]] = []
+    for item in dataset.get('workbookSheets', []):
+        workbook = safe_filename(item.get('workbook', 'workbook'))
+        sheet = safe_filename(item.get('sheet', 'sheet'))
+        rel_path = f'data/csv/by_sheet/{workbook}/{sheet}.csv'
+        write_matrix_csv(project_root / rel_path, item.get('rows', []))
+        sheet_index.append({
+            'workbook': item.get('workbook'),
+            'sheet': item.get('sheet'),
+            'csvPath': rel_path,
+            **item.get('summary', {})
+        })
+    write_dict_csv(csv_dir / 'sheet_index.csv', sheet_index, ['workbook', 'sheet', 'csvPath', 'rows', 'columns', 'nonEmptyCells'])
+
+    return sheet_index
+
+
+def build_quality_report(dataset: Dict[str, Any]) -> Dict[str, Any]:
+    from collections import Counter
+    records = dataset.get('sourcing', {}).get('records', [])
+    missing = [r for r in records if r.get('ppds') in (None, '')]
+    zero = [r for r in records if r.get('ppds') == 0]
+    critical = [
+        r for r in missing
+        if (r.get('volumeMt') or 0) > 0 or (r.get('amount') or 0) > 0 or (r.get('price') or 0) > 0
+    ]
+    by_source = Counter((r.get('plant'), r.get('workbook'), r.get('sheet')) for r in missing)
+    by_month = Counter((r.get('plant'), r.get('year'), r.get('month')) for r in missing)
+    total = len(records)
+    return {
+        'generatedAt': datetime.now(timezone.utc).isoformat(),
+        'checks': {
+            'ppds': {
+                'totalRows': total,
+                'completeRows': total - len(missing),
+                'missingRows': len(missing),
+                'zeroRows': len(zero),
+                'criticalMissingRows': len(critical),
+                'completePercent': round((total - len(missing)) / total * 100, 2) if total else 0,
+                'bySource': [
+                    {'plant': k[0], 'workbook': k[1], 'sheet': k[2], 'missingRows': v}
+                    for k, v in by_source.most_common()
+                ],
+                'byMonth': [
+                    {'plant': k[0], 'year': k[1], 'month': k[2], 'missingRows': v}
+                    for k, v in by_month.most_common()
+                ]
+            },
+            'counts': dataset.get('metadata', {}).get('counts', {})
+        },
+        'recommendation': 'If criticalMissingRows = 0, missing PPDS rows are likely zero-volume audit records. Keep them but exclude them from average PPDS calculations.'
+    }
+
+
+def export_quality_files(dataset: Dict[str, Any], project_root: Path) -> Dict[str, Any]:
+    records = dataset.get('sourcing', {}).get('records', [])
+    missing = [r for r in records if r.get('ppds') in (None, '')]
+    zero = [r for r in records if r.get('ppds') == 0]
+    critical = [
+        r for r in missing
+        if (r.get('volumeMt') or 0) > 0 or (r.get('amount') or 0) > 0 or (r.get('price') or 0) > 0
+    ]
+    report = build_quality_report(dataset)
+    data_dir = project_root / 'data'
+    data_dir.mkdir(parents=True, exist_ok=True)
+    (data_dir / 'quality_report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
+    write_dict_csv(data_dir / 'ppds_missing_records.csv', missing)
+    write_dict_csv(data_dir / 'ppds_zero_records.csv', zero)
+    write_dict_csv(data_dir / 'critical_missing_ppds_records.csv', critical)
+    return report
+
+
+def export_manifest(dataset: Dict[str, Any], project_root: Path, quality: Dict[str, Any]) -> None:
+    data_files = []
+    for path in sorted((project_root / 'data').rglob('*')):
+        if path.is_file():
+            data_files.append({
+                'path': str(path.relative_to(project_root)).replace('\\', '/'),
+                'sizeBytes': path.stat().st_size
+            })
+    manifest = {
+        'project': 'Root Sourcing & Market Situation Dashboard',
+        'generatedAt': datetime.now(timezone.utc).isoformat(),
+        'dashboardEntry': 'index.html',
+        'mainDataFile': 'data/dashboard_data.json',
+        'qualityReport': 'data/quality_report.json',
+        'sourceExcelFolder': 'data/source_excel/',
+        'csvFolder': 'data/csv/',
+        'counts': dataset.get('metadata', {}).get('counts', {}),
+        'ppdsQuality': quality.get('checks', {}).get('ppds', {}),
+        'files': data_files,
+    }
+    (project_root / 'data' / 'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8')
+
+
+def resolve_source_dir(project_root: Path, argv: List[str]) -> Path:
+    if len(argv) > 1:
+        return Path(argv[1]).resolve()
+    preferred = project_root / 'data' / 'source_excel'
+    if preferred.exists():
+        return preferred
+    return project_root
+
+
 if __name__ == '__main__':
     project_root = Path(__file__).resolve().parents[1]
-    base = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else project_root
+    source_dir = resolve_source_dir(project_root, sys.argv)
     out = project_root / 'data' / 'dashboard_data.json'
-    ds = build_dataset(base, out)
-    print(json.dumps(ds['metadata'], ensure_ascii=False, indent=2))
+    dataset = build_dataset(source_dir, out)
+    export_csv_files(dataset, project_root)
+    quality = export_quality_files(dataset, project_root)
+    export_manifest(dataset, project_root, quality)
+    print(json.dumps({
+        'sourceDir': str(source_dir),
+        'metadata': dataset.get('metadata', {}),
+        'ppdsQuality': quality.get('checks', {}).get('ppds', {})
+    }, ensure_ascii=False, indent=2))

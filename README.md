@@ -1,83 +1,89 @@
 # Root Sourcing & Market Situation Dashboard
 
-Static interactive dashboard for GitHub Pages, designed from the provided `index(16).html` style pattern and converted from the attached Excel workbooks.
+Interactive static dashboard for GitHub Pages. The dashboard reads `data/dashboard_data.json` and includes CSV backups for auditing each source sheet.
 
-## Included files
+## Folder structure
 
 ```text
 root_sourcing_dashboard/
 ├── index.html
-├── data/
-│   └── dashboard_data.json
-├── tools/
-│   └── convert_excel_to_json.py
 ├── README.md
-└── SYSTEM_DESIGN.md
+├── SYSTEM_DESIGN.md
+├── DATA_UPDATE_WORKFLOW.md
+├── update_data.sh
+├── update_data.bat
+│
+├── data/
+│   ├── dashboard_data.json                  # Main file used by dashboard
+│   ├── manifest.json                        # Data version, file list, row counts
+│   ├── quality_report.json                  # Data quality checks
+│   ├── ppds_missing_records.csv             # Rows with missing PPDS
+│   ├── ppds_zero_records.csv                # Rows with PPDS = 0
+│   ├── critical_missing_ppds_records.csv     # Critical rows requiring review
+│   │
+│   ├── source_excel/                        # Original Excel files
+│   │   ├── KSN Root Sourcing report App.xlsx
+│   │   ├── SK Root Sourcing report App.xlsx
+│   │   ├── Market situation.xlsx
+│   │   └── ST_PPDS_Price template.xlsx
+│   │
+│   └── csv/
+│       ├── sourcing_records_all.csv
+│       ├── sk_regroot.csv
+│       ├── ksn_regroot.csv
+│       ├── kpi_monthly_all.csv
+│       ├── sk_kpi_monthly.csv
+│       ├── ksn_kpi_monthly.csv
+│       ├── volume_contribution_all.csv
+│       ├── vendor_master_all.csv
+│       ├── sheet_index.csv
+│       └── by_sheet/                        # CSV export for every Excel sheet
+│
+├── tools/
+│   ├── convert_excel_to_json.py             # Standard-library converter
+│   └── validate_data.py                     # Data quality validator
+│
+└── .github/workflows/
+    └── build-data.yml                       # Optional GitHub Actions automation
 ```
 
-## Data sources converted
+## Run locally
 
-- `KSN Root Sourcing report App.xlsx`
-- `SK Root Sourcing report App.xlsx`
-- `Market situation.xlsx`
-- `ST_PPDS_Price template.xlsx`
+```bash
+python3 tools/convert_excel_to_json.py
+python3 tools/validate_data.py
+python3 -m http.server 8000
+```
 
-Generated dataset summary:
-
-- Sourcing transaction records: 14,875 rows
-- KPI monthly rows: 96 rows
-- Volume contribution rows: 96 rows
-- Vendor name master rows: 1,694 rows
-- Workbook sheets available in Sheet Explorer: 75 sheets
-
-## Main dashboard tabs
-
-1. **Overview** — KPI cards, monthly volume trend, KPI trend, vendor type contribution, top provinces, top vendors.
-2. **Sourcing Details** — farmer/broker/regular volume trend, area insights, searchable transaction table.
-3. **Market Situation** — tapioca starch/chip/ethanol/dry pulp price trends and Thailand tapioca production chart.
-4. **Sheet Explorer** — view and export every sheet from every workbook.
-5. **Data Quality** — field completeness, workbook/sheet coverage, data notes.
-6. **GitHub Setup** — deployment steps embedded in the dashboard.
-
-## Deploy to GitHub Pages
-
-1. Create a new GitHub repository, for example `root-sourcing-dashboard`.
-2. Upload all files in this folder to the repository root.
-3. Go to **Settings → Pages**.
-4. Select **Deploy from a branch**.
-5. Select branch **main** and folder **/root**.
-6. Open the generated GitHub Pages URL.
-
-## Update data later
-
-Put the new Excel files in the same project root using these exact names:
+Open:
 
 ```text
-KSN Root Sourcing report App.xlsx
-SK Root Sourcing report App.xlsx
-Market situation.xlsx
-ST_PPDS_Price template.xlsx
+http://localhost:8000
 ```
 
-Then run:
+On Windows:
 
-```bash
-python tools/convert_excel_to_json.py
+```bat
+update_data.bat
 ```
 
-If the Excel files are stored in another folder:
+## Update data in the future
 
-```bash
-python tools/convert_excel_to_json.py /path/to/excel-folder
-```
+1. Replace or update the Excel files in `data/source_excel/`.
+2. Run `python3 tools/convert_excel_to_json.py`.
+3. Check `data/quality_report.json`.
+4. Commit and push to GitHub.
+5. GitHub Pages will show the updated dashboard.
 
-Commit the updated `data/dashboard_data.json` to GitHub.
+## Current data quality
 
-## Notes
+- Root sourcing records: 14,875 rows
+- KPI rows: 96 rows
+- Volume rows: 96 rows
+- Vendor master rows: 1,694 rows
+- Workbook sheets exported: 75 sheets
+- PPDS complete: 14,768 rows
+- PPDS missing: 107 rows
+- Critical missing PPDS: 0 rows
 
-- This dashboard is a static web app. It does not require a backend server or database.
-- GitHub Pages can serve the JSON file directly.
-- Opening `index.html` by double-clicking may block local JSON loading in some browsers. Use GitHub Pages or a local web server such as `python -m http.server`.
-- Weighted Starch = `sum(Weigh starch) / sum(Volume kg)`.
-- Weighted PPDS = `sum(Amount) / sum(Weigh starch)`.
-- Average Price = `sum(Amount) / sum(Volume kg)`.
+The current missing PPDS rows are zero-volume / zero-amount audit records, so they are kept in the dataset but excluded from average PPDS calculations in the dashboard.
