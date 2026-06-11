@@ -1,2254 +1,503 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบลงทะเบียนแปลงปลูก - Agricultural Data Entry</title>
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- PapaParse สำหรับอ่านไฟล์ CSV (ใช้สำหรับปุ่ม นำเข้าข้อมูล CSV เท่านั้น) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: { DEFAULT: '#007D40', light: '#78BE20', dark: '#004724', bg: '#F8FAFC', accent: '#FFB81C' },
-                        damage: { DEFAULT: '#ef4444', light: '#fca5a5', bg: '#fef2f2' },
-                        harvest: { DEFAULT: '#d97706', light: '#fcd34d', bg: '#fffbeb' }
-                    },
-                    fontFamily: { sans: ['Prompt', 'sans-serif'] }
-                }
-            }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Root Sourcing & Market Situation Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { ingredion: '#007A3E', ingredionDark: '#005A2E', ingredionLight: '#E8F5E9', ink: '#0F172A' },
+          fontFamily: { sans: ['Prompt', 'sans-serif'] }
         }
-    </script>
-
-    <style>
-        body { font-family: 'Prompt', sans-serif; background-color: #F8FAFC; }
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #007D40; }
-        .input-field { @apply w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-light focus:border-brand-light bg-white transition-colors; }
-        .input-field[disabled] { @apply bg-slate-50 text-slate-400 cursor-not-allowed; }
-        .input-error { @apply border-red-500 bg-red-50 ring-1 ring-red-500 text-red-700 font-medium; }
-        .input-warn { @apply border-amber-500 bg-amber-50 ring-1 ring-amber-500 text-amber-800; }
-        select.input-error { color: #b91c1c; }
-        
-        .tab-btn { @apply px-5 py-3 font-medium text-slate-500 border-b-2 border-transparent hover:text-brand hover:border-brand/30 transition-colors whitespace-nowrap; }
-        .tab-btn.active { @apply text-brand border-brand font-semibold; }
-        .tab-btn-damage { @apply px-5 py-3 font-medium text-slate-500 border-b-2 border-transparent hover:text-damage hover:border-damage/30 transition-colors whitespace-nowrap; }
-        .tab-btn-damage.active { @apply text-damage border-damage font-semibold; }
-        .tab-btn-harvest { @apply px-5 py-3 font-medium text-slate-500 border-b-2 border-transparent hover:text-harvest hover:border-harvest/30 transition-colors whitespace-nowrap; }
-        .tab-btn-harvest.active { @apply text-harvest border-harvest font-semibold; }
-        
-        .notif-scroll::-webkit-scrollbar { width: 5px; }
-    </style>
+      }
+    };
+  </script>
+  <style>
+    body { background:#F8FAFC; color:#334155; font-family:'Prompt',sans-serif; }
+    .card { background:white; border:1px solid #E2E8F0; border-radius:18px; box-shadow:0 8px 28px rgba(15,23,42,.06); }
+    .kpi-card { border-bottom-width:5px; }
+    .filter-select, .input-box { width:100%; border:1px solid #CBD5E1; border-radius:12px; background:white; padding:.55rem .75rem; font-size:.875rem; outline:none; }
+    .filter-select:focus, .input-box:focus { border-color:#007A3E; box-shadow:0 0 0 3px rgba(0,122,62,.12); }
+    .tab-btn { color:#64748B; border:1px solid transparent; }
+    .tab-btn.active { background:#E8F5E9; color:#005A2E; border-color:#BBE7C7; }
+    .table-wrap { max-height:540px; overflow:auto; border:1px solid #E2E8F0; border-radius:14px; }
+    th { position:sticky; top:0; z-index:10; background:#F1F5F9; }
+    .pill { display:inline-flex; align-items:center; gap:.35rem; border-radius:999px; padding:.25rem .65rem; font-size:.75rem; font-weight:600; background:#F1F5F9; color:#475569; }
+    .pill.green { background:#E8F5E9; color:#007A3E; }
+    .pill.blue { background:#EFF6FF; color:#1D4ED8; }
+    .pill.orange { background:#FFF7ED; color:#C2410C; }
+    .pill.purple { background:#F5F3FF; color:#6D28D9; }
+    .chart-box { height:320px; position:relative; }
+    .small-chart { height:260px; position:relative; }
+    .skeleton { animation:pulse 1.6s infinite; background:linear-gradient(90deg,#F1F5F9,#E2E8F0,#F1F5F9); background-size:200% 100%; }
+    @keyframes pulse { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    @media print { .no-print{display:none!important} .card{box-shadow:none; break-inside:avoid} body{background:white} }
+  </style>
 </head>
-<body class="text-slate-700 antialiased h-screen flex flex-col overflow-hidden">
-
-    <!-- ================= 1. LOGIN SCREEN ================= -->
-    <div id="login-screen" class="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand to-brand-light"></div>
-            <div class="text-center mb-8">
-                <div class="w-16 h-16 rounded-2xl bg-brand/10 text-brand flex items-center justify-center text-3xl mx-auto mb-4">
-                    <i class="fa-solid fa-seedling"></i>
-                </div>
-                <h2 class="text-2xl font-bold text-slate-800">เข้าสู่ระบบ</h2>
-                <p class="text-slate-500 text-sm mt-1">ระบบลงทะเบียนแปลงปลูกมันสำปะหลัง</p>
-            </div>
-            
-            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-5">
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">ชื่อผู้ใช้งาน (Username)</label>
-                    <div class="relative">
-                        <i class="fa-solid fa-user absolute left-3 top-3 text-slate-400"></i>
-                        <input type="text" id="login-user" class="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand outline-none" placeholder="กรอก Username" required>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">รหัสผ่าน (Password)</label>
-                    <div class="relative">
-                        <i class="fa-solid fa-lock absolute left-3 top-3 text-slate-400"></i>
-                        <input type="password" id="login-pass" class="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand outline-none" placeholder="กรอก Password" required>
-                    </div>
-                </div>
-                <button type="submit" id="btn-login" class="w-full bg-brand hover:bg-brand-dark text-white font-medium py-2.5 rounded-lg transition-colors flex justify-center items-center mt-4">
-                    <span id="login-text">เข้าสู่ระบบ <i class="fa-solid fa-arrow-right-to-bracket ml-2"></i></span>
-                </button>
-            </form>
+<body class="antialiased">
+  <nav class="bg-ingredion text-white sticky top-0 z-50 shadow-lg no-print">
+    <div class="max-w-7xl mx-auto p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="bg-white/15 rounded-2xl p-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
         </div>
-    </div>
-
-    <!-- ================= 2. MAIN APPLICATION ================= -->
-    <div id="app-screen" class="flex-1 flex flex-col hidden h-full">
-        <!-- Navbar -->
-        <nav class="bg-white border-b border-slate-200 shadow-sm shrink-0 z-50 relative">
-            <div class="px-6 py-2 flex justify-between items-center overflow-visible">
-                <div class="flex items-center gap-6">
-                    <h1 class="text-lg font-bold tracking-tight text-brand flex items-center shrink-0">
-                        <div class="w-8 h-8 rounded-lg bg-brand/10 text-brand flex items-center justify-center mr-3 shadow-sm">
-                            <i class="fa-solid fa-seedling"></i>
-                        </div>
-                        <span class="hidden sm:inline">Data Entry System</span>
-                    </h1>
-                    <div class="flex items-center gap-1 border-l border-slate-200 pl-4">
-                        <button onclick="switchView('entry')" id="tab-entry" class="tab-btn active"><i class="fa-solid fa-pen-to-square mr-2"></i> ลงทะเบียนใหม่</button>
-                        <button onclick="switchView('profile')" id="tab-profile" class="tab-btn"><i class="fa-solid fa-address-card mr-2"></i> ข้อมูลแปลง</button>
-                        <button onclick="switchView('damage')" id="tab-damage" class="tab-btn-damage"><i class="fa-solid fa-house-crack mr-2"></i> แจ้งพื้นที่เสียหาย</button>
-                        <button onclick="switchView('harvest')" id="tab-harvest" class="tab-btn-harvest"><i class="fa-solid fa-truck-field mr-2"></i> แจ้งเก็บเกี่ยว</button>
-                        <button onclick="switchView('history')" id="tab-history" class="tab-btn"><i class="fa-solid fa-clock-rotate-left mr-2"></i> ประวัติการส่ง</button>
-                    </div>
-                </div>
-                
-                <div class="flex items-center gap-3 shrink-0 ml-4">
-                    <div id="db-status" class="hidden sm:flex text-xs font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200 items-center">
-                        <i class="fa-solid fa-spinner fa-spin mr-1.5 text-amber-500" id="db-status-icon"></i>
-                        <span id="db-status-text">กำลังซิงค์ข้อมูล...</span>
-                    </div>
-                    
-                    <!-- Notification Bell -->
-                    <div class="relative ml-2">
-                        <button id="btn-bell" onclick="toggleNotificationPanel(event)" class="text-slate-500 hover:text-brand relative p-2 rounded-full transition-colors focus:outline-none bg-slate-50 hover:bg-slate-200 border border-slate-200">
-                            <i class="fa-solid fa-bell text-lg"></i>
-                            <span id="notif-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center hidden border-2 border-white shadow-sm transition-transform scale-110">0</span>
-                        </button>
-                        
-                        <div id="notif-panel" class="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-slate-200 hidden z-50 overflow-hidden transform origin-top-right transition-all">
-                            <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                                <h3 class="font-bold text-slate-700 text-sm"><i class="fa-solid fa-message mr-2 text-brand"></i> การแจ้งเตือนล่าสุด</h3>
-                                <button onclick="clearNotifications()" class="text-xs text-slate-400 hover:text-red-500 font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors">ล้างทั้งหมด</button>
-                            </div>
-                            <div id="notif-list" class="max-h-80 overflow-y-auto notif-scroll divide-y divide-slate-50">
-                                <div class="p-8 text-center text-slate-400 text-sm italic flex flex-col items-center justify-center">
-                                    <i class="fa-regular fa-bell-slash text-3xl mb-2 opacity-50"></i>
-                                    ไม่มีการแจ้งเตือน
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="text-sm font-medium text-slate-600 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200 flex items-center">
-                        <i class="fa-solid fa-circle-user text-slate-400 mr-2"></i>
-                        <span id="current-username" class="max-w-[100px] truncate">User</span>
-                        <span id="admin-badge" class="hidden ml-2 bg-brand text-white text-[10px] px-2 py-0.5 rounded uppercase font-bold">Admin</span>
-                    </div>
-                    <button onclick="handleLogout()" class="text-sm font-medium text-red-500 hover:text-red-700 p-1.5 rounded-full transition-colors bg-red-50 border border-red-100" title="ออกจากระบบ">
-                        <i class="fa-solid fa-power-off text-lg"></i>
-                    </button>
-                </div>
-            </div>
-        </nav>
-
-        <!-- =========== VIEW 1: DATA ENTRY (ลงทะเบียนใหม่) =========== -->
-        <main id="view-entry" class="flex-1 overflow-hidden flex flex-col p-4 md:p-6 bg-slate-50 relative z-0">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col flex-1 overflow-hidden relative">
-                <!-- Edit Mode Banner -->
-                <div id="edit-mode-banner" class="hidden bg-amber-100 text-amber-800 border-b border-amber-200 px-6 py-2 text-sm font-semibold flex justify-between items-center">
-                    <span><i class="fa-solid fa-pen mr-2"></i> โหมดแก้ไขข้อมูลที่เคยส่งไปแล้ว (Batch ID: <span id="edit-batch-id"></span>)</span>
-                    <button onclick="cancelEdit()" class="text-amber-700 hover:text-amber-900 underline text-xs font-bold">ยกเลิกการแก้ไข</button>
-                </div>
-
-                <!-- Form Header -->
-                <div class="p-4 border-b border-slate-100 bg-slate-50/50 shrink-0 relative flex flex-wrap gap-4 items-end justify-between">
-                    <div class="flex flex-wrap gap-4 w-full md:w-auto" id="global-settings-container">
-                        <div id="global-agro-container">
-                            <label class="block text-sm font-semibold text-slate-700 mb-2">ผู้ดูแล (ค่าเริ่มต้น) <span class="text-red-500">*</span></label>
-                            <input type="text" id="global-agronomist" class="input-field bg-slate-100 font-medium text-brand-dark w-48" readonly>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-2">Crop Season <span class="text-red-500">*</span></label>
-                            <select id="global-season" class="input-field w-32">
-                                <option value="2026">2026</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="refreshAllData()" class="px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-xl hover:bg-emerald-100 font-medium text-sm transition-colors shadow-sm flex items-center">
-                            <i class="fa-solid fa-rotate-right mr-2"></i> รีเฟรชข้อมูล
-                        </button>
-                        <input type="file" id="import-csv-file" accept=".csv" class="hidden" onchange="processImportCSV(event)">
-                        <button onclick="document.getElementById('import-csv-file').click()" class="px-4 py-2 bg-blue-50 text-blue-600 border border-blue-200 rounded-xl hover:bg-blue-100 font-medium text-sm transition-colors shadow-sm flex items-center">
-                            <i class="fa-solid fa-file-import mr-2"></i> นำเข้าข้อมูล (CSV)
-                        </button>
-                        <button onclick="addRows(5)" class="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 text-sm shadow-sm flex items-center">
-                            <i class="fa-solid fa-plus mr-1"></i> เพิ่มแถว
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Data Table Container -->
-                <div class="flex-1 overflow-auto bg-white p-2 relative">
-                    <table class="w-full text-left border-collapse" id="data-table">
-                        <thead class="bg-slate-50 text-slate-600 text-[11px] uppercase font-bold tracking-wider sticky top-0 z-10 shadow-sm border-b border-t border-slate-200">
-                            <tr>
-                                <th class="p-2 w-10 text-center rounded-tl-lg">No.</th>
-                                <th class="p-2 min-w-[130px] text-brand">ผู้ดูแล (Agronomist)</th>
-                                <th class="p-2 min-w-[160px]">ชื่อเกษตรกร</th>
-                                <th class="p-2 min-w-[120px]">เบอร์โทร</th>
-                                <th class="p-2 min-w-[100px]">Vendor Code</th>
-                                <th class="p-2 min-w-[120px]">ประเภท</th>
-                                <th class="p-2 min-w-[130px]">จังหวัด</th>
-                                <th class="p-2 min-w-[130px]">อำเภอ</th>
-                                <th class="p-2 min-w-[130px]">ตำบล</th>
-                                <th class="p-2 min-w-[120px]">ระบบน้ำ</th>
-                                <th class="p-2 min-w-[130px]">สายพันธุ์</th>
-                                <th class="p-2 min-w-[90px] text-right">พื้นที่ (ไร่)</th>
-                                <th class="p-2 min-w-[100px]">เดือนที่ปลูก</th>
-                                <th class="p-2 w-12 text-center rounded-tr-lg">ลบ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-body" class="divide-y divide-slate-100"></tbody>
-                    </table>
-                </div>
-
-                <!-- Footer Actions -->
-                <div class="p-4 border-t border-slate-100 bg-white shrink-0 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <div class="flex flex-wrap items-center gap-2 text-sm">
-                        <div class="font-bold text-brand bg-brand/10 px-3 py-1 rounded-lg border border-brand/10">
-                            <i class="fa-solid fa-list-ol mr-1"></i>
-                            <span id="row-count">0</span> รายการ
-                        </div>
-                        <div class="font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-100">
-                            <i class="fa-solid fa-chart-area mr-1"></i>
-                            พื้นที่ปลูกรวม: <span id="total-planting-area">0</span> ไร่
-                        </div>
-                    </div>
-                    <div class="flex gap-3">
-                        <button onclick="exportCSV()" class="px-6 py-2.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-xl hover:bg-slate-200 font-medium text-sm transition-colors shadow-sm flex items-center">
-                            <i class="fa-solid fa-file-csv mr-2"></i> Export CSV
-                        </button>
-                        <button id="btn-submit" onclick="submitToDB()" class="px-6 py-2.5 bg-brand text-white rounded-xl hover:bg-brand-dark font-medium text-sm transition-colors shadow-sm flex items-center">
-                            <i class="fa-solid fa-cloud-arrow-up mr-2"></i> บันทึกเข้าระบบ
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <!-- =========== VIEW 1.5: PLOT PROFILE (ข้อมูลแปลง) =========== -->
-        <main id="view-profile" class="flex-1 overflow-hidden flex flex-col p-4 md:p-6 bg-slate-50 hidden">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col flex-1 overflow-hidden">
-                <div class="p-6 border-b border-slate-100 bg-blue-50/50 shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h2 class="text-lg font-bold text-blue-700 flex items-center"><i class="fa-solid fa-address-card mr-2"></i> ข้อมูลและสถานะแปลงปลูก</h2>
-                        <p class="text-sm text-blue-600/70 mt-1">ตรวจสอบข้อมูลแปลง แจ้งเตือนข้อมูลที่หายไป และสามารถกดปุ่ม "แก้ไข" เพื่ออัปเดตข้อมูลได้ทุกช่อง</p>
-                    </div>
-                    <div class="flex items-center gap-2 w-full md:w-auto">
-                        <div class="relative w-full md:w-56">
-                            <i class="fa-solid fa-search absolute left-3 top-2.5 text-slate-400"></i>
-                            <input type="text" id="search-profile" onkeyup="filterProfileTable()" placeholder="ค้นหาชื่อ หรือ เบอร์โทร..." class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-300 focus:border-blue-400 outline-none text-sm">
-                        </div>
-                        <button onclick="refreshAllData()" class="shrink-0 bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm flex items-center">
-                            <i class="fa-solid fa-rotate-right mr-1.5"></i> รีเฟรช
-                        </button>
-                        <button onclick="exportProfileCSV()" class="shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm flex items-center">
-                            <i class="fa-solid fa-file-csv mr-1.5"></i> Export
-                        </button>
-                    </div>
-                </div>
-
-                <div class="bg-white border-b border-slate-100 p-4 grid grid-cols-2 md:grid-cols-7 gap-3 shrink-0" id="pf-filters-container">
-                    <select id="pf-filter-agro" onchange="filterProfileTable()" class="input-field py-1.5 text-xs text-slate-600 bg-amber-50 border-amber-200 shadow-sm focus:ring-blue-400 hidden">
-                        <option value="All">- ผู้ดูแลทั้งหมด -</option>
-                    </select>
-                    <select id="pf-filter-season" onchange="filterProfileTable()" class="input-field py-1.5 text-xs text-slate-600 bg-slate-50 border-slate-200 shadow-sm focus:ring-blue-400 cursor-pointer">
-                        <option value="All">- ปีปลูกทั้งหมด -</option>
-                    </select>
-                    <select id="pf-filter-var" onchange="filterProfileTable()" class="input-field py-1.5 text-xs text-slate-600 bg-slate-50 border-slate-200 shadow-sm focus:ring-blue-400 cursor-pointer">
-                        <option value="All">- สายพันธุ์ทั้งหมด -</option>
-                    </select>
-                    <select id="pf-filter-prov" onchange="updateTabDist('pf'); filterProfileTable()" class="input-field py-1.5 text-xs text-slate-600 bg-slate-50 border-slate-200 shadow-sm focus:ring-blue-400 cursor-pointer">
-                        <option value="All">- จังหวัดทั้งหมด -</option>
-                    </select>
-                    <select id="pf-filter-dist" onchange="updateTabSub('pf'); filterProfileTable()" class="input-field py-1.5 text-xs text-slate-600 bg-slate-50 border-slate-200 shadow-sm focus:ring-blue-400 cursor-pointer">
-                        <option value="All">- อำเภอทั้งหมด -</option>
-                    </select>
-                    <select id="pf-filter-sub" onchange="filterProfileTable()" class="input-field py-1.5 text-xs text-slate-600 bg-slate-50 border-slate-200 shadow-sm focus:ring-blue-400 cursor-pointer">
-                        <option value="All">- ตำบลทั้งหมด -</option>
-                    </select>
-                    <button onclick="resetPfFilters()" class="text-xs font-medium text-slate-500 hover:text-blue-600 border border-slate-200 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-center">
-                        <i class="fa-solid fa-rotate-right mr-1.5"></i> ล้างตัวกรอง
-                    </button>
-                </div>
-
-
-
-                <div id="pf-summary-panel" class="bg-blue-50/60 border-b border-blue-100 px-4 py-3 shrink-0">
-                    <div class="flex items-center justify-between gap-3 mb-2">
-                        <h3 class="text-sm font-bold text-blue-700 flex items-center"><i class="fa-solid fa-chart-pie mr-2"></i> สรุปข้อมูลตามตัวกรอง</h3>
-                        <span class="text-[11px] text-blue-600/70">อัปเดตอัตโนมัติเมื่อเลือกตัวกรอง</span>
-                    </div>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <div class="bg-white rounded-xl border border-blue-100 p-3 shadow-sm">
-                            <div class="text-[11px] text-slate-500">จำนวนรายการ</div>
-                            <div id="pf-summary-count" class="text-lg font-black text-slate-800">0</div>
-                        </div>
-                        <div class="bg-white rounded-xl border border-blue-100 p-3 shadow-sm">
-                            <div class="text-[11px] text-slate-500">พื้นที่ปลูกรวม</div>
-                            <div class="text-lg font-black text-brand"><span id="pf-summary-area">0</span> <span class="text-xs font-bold">ไร่</span></div>
-                        </div>
-                        <div class="bg-white rounded-xl border border-red-100 p-3 shadow-sm">
-                            <div class="text-[11px] text-slate-500">พื้นที่เสียหายรวม</div>
-                            <div class="text-lg font-black text-red-600"><span id="pf-summary-damage">0</span> <span class="text-xs font-bold">ไร่</span></div>
-                        </div>
-                        <div class="bg-white rounded-xl border border-emerald-100 p-3 shadow-sm">
-                            <div class="text-[11px] text-slate-500">พื้นที่คงเหลือสุทธิ</div>
-                            <div class="text-lg font-black text-emerald-600"><span id="pf-summary-active">0</span> <span class="text-xs font-bold">ไร่</span></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex-1 overflow-auto p-0 relative">
-                    <table class="w-full text-left border-collapse min-w-[1100px]">
-                        <thead class="bg-slate-50 text-slate-600 text-[11px] uppercase font-bold tracking-wider sticky top-0 z-10 shadow-sm border-b border-slate-200">
-                            <tr>
-                                <th class="p-3 w-12 text-center">No.</th>
-                                <th class="p-3 min-w-[130px] text-brand">ผู้ดูแล</th>
-                                <th class="p-3 min-w-[150px]">ชื่อเกษตรกร</th>
-                                <th class="p-3 min-w-[100px]">เบอร์โทร</th>
-                                <th class="p-3">สถานที่ปลูก (ต./อ./จ.)</th>
-                                <th class="p-3 text-center min-w-[120px]">สายพันธุ์</th>
-                                <th class="p-3 text-center min-w-[100px]">เดือนปลูก</th>
-                                <th class="p-3 text-right min-w-[90px]">พื้นที่ (ไร่)</th>
-                                <th class="p-3 text-center min-w-[120px]">สถานะแปลง</th>
-                                <th class="p-3 text-center w-24">จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="profile-table-body" class="divide-y divide-slate-100"></tbody>
-                    </table>
-                </div>
-            </div>
-        </main>
-
-        <!-- =========== VIEW 2: DAMAGE REPORT (แจ้งพื้นที่เสียหาย) =========== -->
-        <main id="view-damage" class="flex-1 overflow-hidden flex flex-col p-4 md:p-6 bg-slate-50 hidden">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col flex-1 overflow-hidden">
-                <div class="p-6 border-b border-slate-100 bg-damage-bg shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h2 class="text-lg font-bold text-damage flex items-center"><i class="fa-solid fa-house-crack mr-2"></i> แจ้งพื้นที่เสียหาย</h2>
-                        <p class="text-sm text-damage/70 mt-1">อัปเดตข้อมูลความเสียหายเฉพาะเกษตรกรในความดูแลของคุณ</p>
-                    </div>
-                    <div class="flex items-center gap-2 w-full md:w-auto">
-                        <div class="relative w-full md:w-64">
-                            <i class="fa-solid fa-search absolute left-3 top-2.5 text-slate-400"></i>
-                            <input type="text" id="search-damage" onkeyup="filterDamageTable()" placeholder="ค้นหาชื่อ หรือ เบอร์โทร..." class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-damage/30 focus:border-damage outline-none text-sm">
-                        </div>
-                        <button onclick="refreshAllData()" class="shrink-0 bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm flex items-center">
-                            <i class="fa-solid fa-rotate-right mr-1.5"></i> รีเฟรช
-                        </button>
-                    </div>
-                </div>
-
-                <div class="bg-white border-b border-slate-100 p-4 grid grid-cols-2 md:grid-cols-7 gap-3 shrink-0" id="dm-filters-container">
-                    <select id="dm-filter-agro" onchange="filterDamageTable()" class="input-field py-1.5 text-xs text-slate-600 bg-amber-50 border-amber-200 shadow-sm focus:ring-damage hidden">
-                        <option value="All">- ผู้ดูแลทั้งหมด -</option>
-                    </select>
-                    <select id="dm-filter-season" onchange="filterDamageTable()" class="input-field py-1.5 text-xs text-slate-600 bg-slate-50 border-slate-200 shadow-sm focus:ring-damage cursor-pointer">
-                        <option value="All">- ปีปลูกทั้งหมด -</option>
-                    </select>
-                    <select id="dm-filter-var" onchange="filterDamageTable()" class="input-field py-1.5 text-xs text-slate-600 bg-slate-50 border-slate-200 shadow-sm focus:ring-damage cursor-pointer">
-                        <option value="All">- สายพันธุ์ทั้งหมด -</option>
-                    </select>
-                    <select id="dm-filter-prov" onchange="updateTabDist('dm'); filterDamageTable()" class="input-field py-1.5 text-xs text-slate-600 bg-slate-50 border-slate-200 shadow-sm focus:ring-damage cursor-pointer">
-                        <option value="All">- จังหวัดทั้งหมด -</option>
-                    </select>
-                    <select id="dm-filter-dist" onchange="updateTabSub('dm'); filterDamageTable()" class="input-field py-1.5 text-xs text-slate-600 bg-slate-50 border-slate-200 shadow-sm focus:ring-damage cursor-pointer">
-                        <option value="All">- อำเภอทั้งหมด -</option>
-                    </select>
-                    <select id="dm-filter-sub" onchange="filterDamageTable()" class="input-field py-1.5 text-xs text-slate-600 bg-slate-50 border-slate-200 shadow-sm focus:ring-damage cursor-pointer">
-                        <option value="All">- ตำบลทั้งหมด -</option>
-                    </select>
-                    <button onclick="resetDmFilters()" class="text-xs font-medium text-slate-500 hover:text-damage border border-slate-200 rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center">
-                        <i class="fa-solid fa-rotate-right mr-1.5"></i> ล้างตัวกรอง
-                    </button>
-                </div>
-
-
-
-                <div id="dm-summary-panel" class="bg-red-50/60 border-b border-red-100 px-4 py-3 shrink-0">
-                    <div class="flex items-center justify-between gap-3 mb-2">
-                        <h3 class="text-sm font-bold text-damage flex items-center"><i class="fa-solid fa-chart-pie mr-2"></i> สรุปข้อมูลตามตัวกรอง</h3>
-                        <span class="text-[11px] text-red-600/70">อัปเดตอัตโนมัติเมื่อเลือกตัวกรอง</span>
-                    </div>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <div class="bg-white rounded-xl border border-red-100 p-3 shadow-sm">
-                            <div class="text-[11px] text-slate-500">จำนวนรายการ</div>
-                            <div id="dm-summary-count" class="text-lg font-black text-slate-800">0</div>
-                        </div>
-                        <div class="bg-white rounded-xl border border-red-100 p-3 shadow-sm">
-                            <div class="text-[11px] text-slate-500">พื้นที่ปลูกรวม</div>
-                            <div class="text-lg font-black text-brand"><span id="dm-summary-area">0</span> <span class="text-xs font-bold">ไร่</span></div>
-                        </div>
-                        <div class="bg-white rounded-xl border border-red-100 p-3 shadow-sm">
-                            <div class="text-[11px] text-slate-500">พื้นที่เสียหายรวม</div>
-                            <div class="text-lg font-black text-damage"><span id="dm-summary-damage">0</span> <span class="text-xs font-bold">ไร่</span></div>
-                        </div>
-                        <div class="bg-white rounded-xl border border-emerald-100 p-3 shadow-sm">
-                            <div class="text-[11px] text-slate-500">พื้นที่คงเหลือสุทธิ</div>
-                            <div class="text-lg font-black text-emerald-600"><span id="dm-summary-active">0</span> <span class="text-xs font-bold">ไร่</span></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex-1 overflow-auto p-0 relative">
-                    <table class="w-full text-left border-collapse min-w-[900px]">
-                        <thead class="bg-slate-50 text-slate-600 text-[11px] uppercase font-bold tracking-wider sticky top-0 z-10 shadow-sm border-b border-slate-200">
-                            <tr>
-                                <th class="p-3 w-12 text-center">No.</th>
-                                <th class="p-3 min-w-[130px] text-brand">ผู้ดูแล</th>
-                                <th class="p-3 min-w-[150px]">ชื่อเกษตรกร</th>
-                                <th class="p-3">สถานที่ปลูก (ต./อ./จ.)</th>
-                                <th class="p-3 text-center">สายพันธุ์</th>
-                                <th class="p-3 text-right">ปลูกเดิม (ไร่)</th>
-                                <th class="p-3 text-right text-damage bg-damage/5">เสียหาย (ไร่)</th>
-                                <th class="p-3 text-center bg-damage/5 min-w-[120px]">สาเหตุ</th>
-                                <th class="p-3 text-center w-24">บันทึก</th>
-                            </tr>
-                        </thead>
-                        <tbody id="damage-table-body" class="divide-y divide-slate-100"></tbody>
-                    </table>
-                </div>
-            </div>
-        </main>
-
-        <!-- =========== VIEW 3: HARVEST REPORT (แจ้งเก็บเกี่ยว) =========== -->
-        <main id="view-harvest" class="flex-1 overflow-hidden flex flex-col p-4 md:p-6 bg-slate-50 hidden">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col flex-1 overflow-hidden">
-                <div class="p-6 border-b border-slate-100 bg-harvest-bg shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h2 class="text-lg font-bold text-harvest flex items-center"><i class="fa-solid fa-truck-field mr-2"></i> วางแผนและแจ้งการเก็บเกี่ยว</h2>
-                        <p class="text-sm text-harvest/70 mt-1">อ้างอิงพื้นที่จริง (หักลบพื้นที่เสียหายแล้ว) พร้อมคำนวณผลผลิตอัตโนมัติ</p>
-                    </div>
-                    <div class="flex items-center gap-2 w-full md:w-auto">
-                        <div class="relative w-full md:w-64">
-                            <i class="fa-solid fa-search absolute left-3 top-2.5 text-slate-400"></i>
-                            <input type="text" id="search-harvest" onkeyup="filterHarvestTable()" placeholder="ค้นหาชื่อ หรือ เบอร์โทร..." class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-harvest/30 focus:border-harvest outline-none text-sm">
-                        </div>
-                        <button onclick="refreshAllData()" class="shrink-0 bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm flex items-center">
-                            <i class="fa-solid fa-rotate-right mr-1.5"></i> รีเฟรช
-                        </button>
-                    </div>
-                </div>
-
-                <div class="bg-white border-b border-slate-100 p-4 grid grid-cols-2 md:grid-cols-8 gap-3 shrink-0" id="hv-filters-container">
-                    <select id="hv-filter-agro" onchange="filterHarvestTable()" class="input-field py-1.5 text-xs text-slate-600 bg-amber-50 border-amber-200 shadow-sm focus:ring-harvest hidden">
-                        <option value="All">- ผู้ดูแลทั้งหมด -</option>
-                    </select>
-                    
-                    <select id="hv-filter-age" onchange="filterHarvestTable()" class="input-field py-1.5 text-xs text-slate-600 bg-harvest/10 border-harvest/30 shadow-sm focus:ring-harvest cursor-pointer font-semibold text-harvest-dark">
-                        <!-- ถูกสร้างผ่าน JS -->
-                    </select>
-
-                    <select id="hv-filter-season" onchange="filterHarvestTable()" class="input-field py-1.5 text-xs text-slate-600 bg-slate-50 border-slate-200 shadow-sm focus:ring-harvest cursor-pointer">
-                        <option value="All">- ปีปลูกทั้งหมด -</option>
-                    </select>
-                    <select id="hv-filter-var" onchange="filterHarvestTable()" class="input-field py-1.5 text-xs text-slate-600 bg-slate-50 border-slate-200 shadow-sm focus:ring-harvest cursor-pointer">
-                        <option value="All">- สายพันธุ์ทั้งหมด -</option>
-                    </select>
-                    <select id="hv-filter-prov" onchange="updateTabDist('hv'); filterHarvestTable()" class="input-field py-1.5 text-xs text-slate-600 bg-slate-50 border-slate-200 shadow-sm focus:ring-harvest cursor-pointer">
-                        <option value="All">- จังหวัดทั้งหมด -</option>
-                    </select>
-                    <select id="hv-filter-dist" onchange="updateTabSub('hv'); filterHarvestTable()" class="input-field py-1.5 text-xs text-slate-600 bg-slate-50 border-slate-200 shadow-sm focus:ring-harvest cursor-pointer">
-                        <option value="All">- อำเภอทั้งหมด -</option>
-                    </select>
-                    <select id="hv-filter-sub" onchange="filterHarvestTable()" class="input-field py-1.5 text-xs text-slate-600 bg-slate-50 border-slate-200 shadow-sm focus:ring-harvest cursor-pointer">
-                        <option value="All">- ตำบลทั้งหมด -</option>
-                    </select>
-                    <button onclick="resetHvFilters()" class="text-xs font-medium text-slate-500 hover:text-harvest border border-slate-200 rounded-lg hover:bg-orange-50 transition-colors flex items-center justify-center">
-                        <i class="fa-solid fa-rotate-right mr-1.5"></i> ล้างตัวกรอง
-                    </button>
-                </div>
-
-
-
-                <div id="hv-summary-panel" class="bg-amber-50/60 border-b border-amber-100 px-4 py-3 shrink-0">
-                    <div class="flex items-center justify-between gap-3 mb-2">
-                        <h3 class="text-sm font-bold text-harvest flex items-center"><i class="fa-solid fa-chart-pie mr-2"></i> สรุปข้อมูลตามตัวกรอง</h3>
-                        <span class="text-[11px] text-amber-700/70">อัปเดตอัตโนมัติเมื่อเลือกตัวกรอง</span>
-                    </div>
-                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
-                        <div class="bg-white rounded-xl border border-amber-100 p-3 shadow-sm">
-                            <div class="text-[11px] text-slate-500">จำนวนรายการ</div>
-                            <div id="hv-summary-count" class="text-lg font-black text-slate-800">0</div>
-                        </div>
-                        <div class="bg-white rounded-xl border border-amber-100 p-3 shadow-sm">
-                            <div class="text-[11px] text-slate-500">พื้นที่จริงรวม</div>
-                            <div class="text-lg font-black text-brand"><span id="hv-summary-active">0</span> <span class="text-xs font-bold">ไร่</span></div>
-                        </div>
-                        <div class="bg-white rounded-xl border border-amber-100 p-3 shadow-sm">
-                            <div class="text-[11px] text-slate-500">เก็บเกี่ยวแล้ว</div>
-                            <div class="text-lg font-black text-harvest"><span id="hv-summary-harvested">0</span> <span class="text-xs font-bold">ไร่</span></div>
-                        </div>
-                        <div class="bg-white rounded-xl border border-emerald-100 p-3 shadow-sm">
-                            <div class="text-[11px] text-slate-500">พื้นที่คงเหลือ</div>
-                            <div class="text-lg font-black text-emerald-600"><span id="hv-summary-remaining">0</span> <span class="text-xs font-bold">ไร่</span></div>
-                        </div>
-                        <div class="bg-white rounded-xl border border-amber-100 p-3 shadow-sm">
-                            <div class="text-[11px] text-slate-500">ผลผลิตรวม</div>
-                            <div class="text-lg font-black text-slate-800"><span id="hv-summary-tons">0</span> <span class="text-xs font-bold">ตัน</span></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex-1 overflow-auto p-0 relative">
-                    <table class="w-full text-left border-collapse min-w-[1100px]">
-                        <thead class="bg-slate-50 text-slate-600 text-[11px] uppercase font-bold tracking-wider sticky top-0 z-10 shadow-sm border-b border-slate-200">
-                            <tr>
-                                <th class="p-3 w-10 text-center">No.</th>
-                                <th class="p-3 min-w-[130px] text-brand">ผู้ดูแล</th>
-                                <th class="p-3 min-w-[150px]">ชื่อเกษตรกร</th>
-                                <th class="p-3">สถานที่ปลูก</th>
-                                <th class="p-3 text-center">ด.ปลูก</th>
-                                <th class="p-3 text-right">พื้นที่จริง</th>
-                                <th class="p-3 text-center bg-harvest/10 border-l border-harvest/20 min-w-[100px]">พื้นที่เกี่ยว<br>(ไร่) <span class="text-red-500">*</span></th>
-                                <th class="p-3 text-center bg-harvest/10 min-w-[90px]">ผลผลิต<br>(ตัน) <span class="text-red-500">*</span></th>
-                                <th class="p-3 text-center bg-harvest/10 min-w-[90px]">% แป้ง</th>
-                                <th class="p-3 text-center bg-harvest/20 text-harvest-dark min-w-[80px]">ตัน / ไร่</th>
-                                <th class="p-3 text-center bg-harvest/10 min-w-[120px]">เดือนที่เกี่ยว <span class="text-red-500">*</span></th>
-                                <th class="p-3 text-center w-24 bg-harvest/10">บันทึก</th>
-                            </tr>
-                        </thead>
-                        <tbody id="harvest-table-body" class="divide-y divide-slate-100"></tbody>
-                    </table>
-                </div>
-            </div>
-        </main>
-
-        <!-- =========== VIEW 4: HISTORY & LOGS =========== -->
-        <main id="view-history" class="flex-1 overflow-hidden flex flex-col p-4 md:p-6 bg-slate-50 hidden">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col flex-1 overflow-hidden">
-                <div class="px-6 border-b border-slate-200 flex gap-6 bg-slate-50/50 pt-2 shrink-0">
-                    <button onclick="switchHistoryTab('submissions')" id="htab-submissions" class="pb-3 pt-2 font-semibold text-brand border-b-2 border-brand"><i class="fa-solid fa-list-check mr-2"></i> ประวัติการส่งข้อมูล</button>
-                    <button onclick="switchHistoryTab('audits')" id="htab-audits" class="pb-3 pt-2 font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-800"><i class="fa-solid fa-shoe-prints mr-2"></i> บันทึกกิจกรรม (Audit Trail)</button>
-                </div>
-
-                <div id="hview-submissions" class="flex-1 overflow-auto p-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-bold text-slate-800">รายการที่ถูกบันทึกเข้าระบบ <span class="text-xs font-normal text-slate-500 bg-slate-100 px-2 py-1 rounded ml-2">(Real-time จากฐานข้อมูล)</span></h3>
-                        <button onclick="refreshAllData()" class="text-sm text-slate-500 hover:text-brand"><i class="fa-solid fa-rotate-right mr-1"></i> รีเฟรชข้อมูล</button>
-                    </div>
-                    <div class="overflow-x-auto rounded-xl border border-slate-200">
-                        <table class="w-full text-left text-sm min-w-[700px]">
-                            <thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
-                                <tr>
-                                    <th class="p-3">รหัสอ้างอิง (Batch ID)</th>
-                                    <th class="p-3">วัน-เวลาที่ส่ง</th>
-                                    <th class="p-3">ผู้บันทึกข้อมูล (User)</th>
-                                    <th class="p-3">ผู้ดูแล (Agronomist)</th>
-                                    <th class="p-3 text-center">จำนวน (รายการ)</th>
-                                    <th class="p-3 text-center">จัดการ</th>
-                                </tr>
-                            </thead>
-                            <tbody id="history-table-body" class="divide-y divide-slate-100"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div id="hview-audits" class="flex-1 overflow-auto p-6 hidden">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-bold text-slate-800">บันทึกประวัติการกระทำ (Action Logs)</h3>
-                        <button onclick="renderAuditLogs()" class="text-sm text-slate-500 hover:text-brand"><i class="fa-solid fa-rotate-right mr-1"></i> รีเฟรช</button>
-                    </div>
-                    <div class="relative pl-6 border-l-2 border-slate-200 space-y-6" id="audit-logs-container"></div>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <!-- 🌟 MODAL: แก้ไขข้อมูลแปลงแบบเต็มรูปแบบ (Profile Edit Modal) -->
-    <div id="edit-profile-modal" class="fixed inset-0 z-[200] bg-slate-900/60 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
-            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
-                <h3 class="font-bold text-lg text-slate-800 flex items-center"><i class="fa-solid fa-pen-to-square text-blue-600 mr-2"></i> แก้ไขข้อมูลแปลง</h3>
-                <button onclick="closeProfileModal()" class="text-slate-400 hover:text-red-500 transition-colors w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
-            
-            <div class="p-6 overflow-y-auto flex-1 space-y-5">
-                <input type="hidden" id="modal-old-farmer">
-                <input type="hidden" id="modal-agro">
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1.5">ชื่อเกษตรกร <span class="text-red-500">*</span></label>
-                        <input type="text" id="modal-farmer" class="input-field font-semibold text-slate-800">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1.5">เบอร์โทร</label>
-                        <input type="text" id="modal-tel" class="input-field text-slate-700">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1.5">Vendor Code</label>
-                        <input type="text" id="modal-vendor" class="input-field text-slate-700">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1.5">ประเภทเกษตรกร</label>
-                        <select id="modal-type" class="input-field">
-                            <option value="Contract">Contract</option>
-                            <option value="Non-Contract">Non-Contract</option>
-                            <option value="Broker">Broker</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1.5">จังหวัด</label>
-                        <select id="modal-prov" class="input-field" onchange="updateModalDist()"></select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1.5">อำเภอ</label>
-                        <select id="modal-dist" class="input-field" onchange="updateModalSub()"></select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1.5">ตำบล</label>
-                        <select id="modal-sub" class="input-field"></select>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="md:col-span-2">
-                        <label class="block text-xs font-bold text-slate-600 mb-1.5">ระบบน้ำ</label>
-                        <select id="modal-irrig" class="input-field">
-                            <option value="น้ำฝน (Rainfade)">น้ำฝน (Rainfade)</option>
-                            <option value="น้ำหยด (Drip)">น้ำหยด (Drip)</option>
-                        </select>
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-xs font-bold text-slate-600 mb-1.5">สายพันธุ์</label>
-                        <select id="modal-var" class="input-field"></select>
-                    </div>
-                    <div class="col-span-1 md:col-span-2">
-                        <label class="block text-xs font-bold text-slate-600 mb-1.5">พื้นที่ (ไร่)</label>
-                        <input type="number" id="modal-area" step="0.1" class="input-field font-bold text-brand-dark">
-                    </div>
-                    <div class="col-span-1 md:col-span-2">
-                        <label class="block text-xs font-bold text-slate-600 mb-1.5">เดือนที่ปลูก</label>
-                        <select id="modal-month" class="input-field"></select>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="p-5 border-t border-slate-100 bg-white flex justify-end gap-3 shrink-0">
-                <button onclick="closeProfileModal()" class="px-5 py-2.5 text-slate-600 font-medium hover:bg-slate-100 rounded-xl transition-colors">ยกเลิก</button>
-                <button onclick="submitProfileModal()" id="btn-modal-save" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm transition-colors flex items-center">
-                    <i class="fa-solid fa-save mr-2"></i> บันทึกการแก้ไข
-                </button>
-            </div>
+        <div>
+          <h1 class="text-xl md:text-2xl font-semibold">Root Sourcing & Market Situation Dashboard</h1>
+          <p id="loadStatus" class="text-xs text-white/80">กำลังโหลดข้อมูลจาก data/dashboard_data.json ...</p>
         </div>
+      </div>
+      <div class="flex flex-wrap gap-2 items-center">
+        <label class="cursor-pointer bg-white/15 hover:bg-white/25 px-4 py-2 rounded-full text-sm border border-white/30">
+          📦 Load JSON
+          <input id="jsonUpload" type="file" accept=".json,application/json" class="hidden" />
+        </label>
+        <button id="exportFilteredBtn" class="bg-white text-ingredion px-4 py-2 rounded-full text-sm font-semibold hover:bg-gray-100">Export Filtered CSV</button>
+        <button onclick="window.print()" class="bg-white/15 hover:bg-white/25 px-4 py-2 rounded-full text-sm border border-white/30">Print Report</button>
+      </div>
     </div>
+  </nav>
 
-    <!-- 🌟 MODAL: Success Alert (ป๊อปอัปแจ้งเตือน) -->
-    <div id="success-modal" class="fixed inset-0 z-[400] bg-slate-900/60 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center transform scale-95 transition-transform" id="success-modal-content">
-            <div class="w-20 h-20 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-4 shadow-inner">
-                <i class="fa-solid fa-check"></i>
-            </div>
-            <h3 class="text-2xl font-bold text-slate-800 mb-2" id="success-modal-title">บันทึกสำเร็จ</h3>
-            <p class="text-slate-600 mb-6" id="success-modal-desc">ข้อมูลถูกบันทึกเข้าระบบเรียบร้อยแล้ว</p>
-            <button onclick="closeSuccessModal()" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-md transition-colors">
-                ตกลง
-            </button>
+  <main class="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
+    <section id="alert" class="hidden card border-l-4 border-l-red-500 p-4 text-sm text-red-700 bg-red-50"></section>
+
+    <section class="card p-4 no-print">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+        <div>
+          <h2 class="font-semibold text-ink">🔎 ตัวกรองข้อมูลหลัก</h2>
+          <p class="text-xs text-slate-500 mt-1">ใช้ควบคุม KPI, กราฟ และตารางข้อมูลรับซื้อรากมันสำปะหลัง</p>
         </div>
-    </div>
-
-    <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-6 right-6 transform translate-y-24 opacity-0 transition-all duration-300 px-6 py-3 rounded-xl shadow-lg flex items-center z-[500] text-white bg-slate-800">
-        <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400 mr-3 text-lg"></i>
-        <span id="toast-msg" class="text-sm font-medium whitespace-pre-line">แจ้งเตือน</span>
-    </div>
-
-    <!-- ================= JAVASCRIPT ================= -->
-    <script>
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbx2s46kxL3iamioqlHfDFmHI0Qz3YH5XWQI2cwL_37y_HR2ePEIMmBqmsKCs86Y4tyj/exec";
-
-        let AGRONOMIST_USERS = { "admin": { pass: "1234", fullName: "แอดมิน (Offline)", role: "admin" } };
-        let currentUser = null, currentFullName = null, editingBatchId = null, rowCounter = 0;
-        
-        let existingFarmersDB = []; 
-        let locationData = {}; let provinces = [];
-        let masterData = []; // 🌟 เก็บข้อมูลแบบ Real-time ตรงจาก API
-        let farmerToAgroMap = {}; 
-        
-        window.onlineHistoryDB = [];
-
-        const varietyOptions = ['HBwx1','HBwx2','HBwx3','HBwx4','HBwx5','HBwx6','HBwx7','HBwx8','WaxyR1','WaxyR2','KU50','Rayong5','Rayong7','Rayong9','Rayong72','Rayong81','HuayBong60','HuayBong80','Pirun','Other'];
-        const monthArray = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-
-        // --- Custom Success Modal ---
-        function showSuccessModal(title, desc) {
-            document.getElementById('success-modal-title').innerText = title || 'บันทึกสำเร็จ';
-            document.getElementById('success-modal-desc').innerText = desc || 'ข้อมูลถูกบันทึกเข้าระบบเรียบร้อยแล้ว';
-            
-            const modal = document.getElementById('success-modal');
-            const content = document.getElementById('success-modal-content');
-            
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                content.classList.remove('scale-95');
-                content.classList.add('scale-100');
-            }, 10);
-        }
-
-        function closeSuccessModal() {
-            const modal = document.getElementById('success-modal');
-            const content = document.getElementById('success-modal-content');
-            
-            content.classList.remove('scale-100');
-            content.classList.add('scale-95');
-            
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 200);
-        }
-
-        // --- Notifications System ---
-        let notifHistory = [];
-        let unreadNotifCount = 0;
-
-        function toggleNotificationPanel(e) {
-            if(e) e.stopPropagation();
-            const panel = document.getElementById('notif-panel');
-            panel.classList.toggle('hidden');
-            const btn = document.getElementById('btn-bell');
-            btn.classList.add('scale-95');
-            setTimeout(() => btn.classList.remove('scale-95'), 150);
-
-            if (!panel.classList.contains('hidden')) {
-                unreadNotifCount = 0; 
-                renderNotificationList();
-            }
-        }
-
-        document.addEventListener('click', function(event) {
-            const panel = document.getElementById('notif-panel');
-            const bell = document.getElementById('btn-bell');
-            if (panel && !panel.classList.contains('hidden')) {
-                if (!panel.contains(event.target) && !bell.contains(event.target)) {
-                    panel.classList.add('hidden');
-                }
-            }
-        });
-
-        function addNotification(message, type) {
-            notifHistory.unshift({ msg: message, type: type, time: new Date() });
-            if (notifHistory.length > 50) notifHistory.pop(); 
-            unreadNotifCount++;
-            
-            const badge = document.getElementById('notif-badge');
-            badge.classList.remove('hidden');
-            badge.classList.add('animate-bounce');
-            setTimeout(() => badge.classList.remove('animate-bounce'), 1000);
-            renderNotificationList();
-        }
-
-        function clearNotifications() {
-            notifHistory = []; unreadNotifCount = 0; renderNotificationList();
-            document.getElementById('notif-panel').classList.add('hidden');
-        }
-
-        function renderNotificationList() {
-            const badge = document.getElementById('notif-badge');
-            if (unreadNotifCount > 0) { badge.innerText = unreadNotifCount > 9 ? '9+' : unreadNotifCount; badge.classList.remove('hidden'); } 
-            else { badge.classList.add('hidden'); }
-
-            const list = document.getElementById('notif-list'); list.innerHTML = '';
-            if (notifHistory.length === 0) {
-                list.innerHTML = `<div class="p-8 text-center text-slate-400 text-sm italic flex flex-col items-center justify-center"><i class="fa-regular fa-bell-slash text-3xl mb-2 opacity-50"></i>ไม่มีการแจ้งเตือนล่าสุด</div>`; return;
-            }
-
-            notifHistory.forEach(n => {
-                let iconClass = 'fa-circle-check text-emerald-500'; let bgClass = 'bg-emerald-50';
-                if (n.type === 'error') { iconClass = 'fa-triangle-exclamation text-red-500'; bgClass = 'bg-red-50'; }
-                else if (n.type === 'warning') { iconClass = 'fa-triangle-exclamation text-amber-500'; bgClass = 'bg-amber-50'; }
-                else if (n.type === 'info') { iconClass = 'fa-info-circle text-blue-500'; bgClass = 'bg-blue-50'; } 
-                const timeStr = n.time.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-                list.innerHTML += `
-                    <div class="p-4 hover:bg-slate-100 transition-colors flex gap-3 items-start border-b border-slate-50 last:border-0">
-                        <div class="mt-0.5 shrink-0 ${bgClass} w-8 h-8 rounded-full flex items-center justify-center shadow-sm"><i class="fa-solid ${iconClass}"></i></div>
-                        <div class="flex-1">
-                            <p class="text-xs text-slate-700 whitespace-pre-line leading-relaxed font-medium">${n.msg}</p>
-                            <span class="text-[10px] text-slate-400 mt-1 block"><i class="fa-regular fa-clock mr-1"></i>วันนี้เวลา ${timeStr} น.</span>
-                        </div>
-                    </div>`;
-            });
-        }
-
-        function isAdmin() { return AGRONOMIST_USERS[currentUser] && AGRONOMIST_USERS[currentUser].role === 'admin'; }
-
-        // ==========================================
-        // 1. Initial Load & Auth (Real-time API)
-        // ==========================================
-        async function loadLocationDataFromCSV() {
-            try {
-                const res = await fetch('ThepExcel-Thailand-Tambon.csv');
-                if (res.ok) {
-                    Papa.parse(await res.text(), {
-                        header: true, skipEmptyLines: true,
-                        complete: function(results) {
-                            let newData = {};
-                            results.data.forEach(row => {
-                                let prov = row['ProvinceThaiShort'] || row['ProvinceThai'];
-                                let dist = row['DistrictThaiShort'] || row['DistrictThai'];
-                                let sub = row['TambonThaiShort'] || row['TambonThai'];
-                                if (prov && dist && sub) {
-                                    if (!newData[prov]) newData[prov] = {};
-                                    if (!newData[prov][dist]) newData[prov][dist] = [];
-                                    if (!newData[prov][dist].includes(sub)) newData[prov][dist].push(sub);
-                                }
-                            });
-                            if (Object.keys(newData).length > 0) {
-                                locationData = newData; provinces = Object.keys(locationData).sort();
-                                updateAllProvinceDropdowns();
-                            }
-                        }
-                    });
-                }
-            } catch (e) { console.error("Error loading location CSV:", e); }
-        }
-
-        // 🌟 ดึงข้อมูลจาก API แบบสดๆ ไม่ผ่าน CSV เพื่อแก้ปัญหาดีเลย์ 5 นาที
-        async function fetchSystemData() {
-            try {
-                const dbIcon = document.getElementById('db-status-icon'); const dbText = document.getElementById('db-status-text');
-                if(dbIcon) dbIcon.className = "fa-solid fa-spinner fa-spin mr-1.5 text-amber-500";
-                if(dbText) dbText.innerText = "กำลังซิงค์ข้อมูล...";
-
-                const res = await fetch(GAS_API_URL, { redirect: 'follow' });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.status === 'success') {
-                        if (data.users && Object.keys(data.users).length > 0) AGRONOMIST_USERS = data.users;
-                        if (data.existingFarmers) existingFarmersDB = data.existingFarmers;
-                        if (data.seasons && data.seasons.length > 0) {
-                            const sSelect = document.getElementById('global-season');
-                            if(sSelect) {
-                                sSelect.innerHTML = ''; 
-                                data.seasons.forEach((s, idx) => { sSelect.innerHTML += `<option value="${s}" ${idx===0?'selected':''}>${s}</option>`; });
-                            }
-                        }
-                        
-                        // 🌟 ดึง Master Data แบบ Real-time มาใส่ตัวแปร
-                        if (data.masterData) {
-                            masterData = data.masterData;
-                            farmerToAgroMap = {};
-                            masterData.forEach(row => {
-                                if (row.farmer && row.agronomist) farmerToAgroMap[row.farmer] = row.agronomist;
-                            });
-                        }
-
-                        if (data.historyBatches) {
-                            window.onlineHistoryDB = data.historyBatches;
-                        }
-
-                        if(dbIcon) dbIcon.className = "fa-solid fa-cloud-check mr-1.5 text-emerald-500";
-                        if(dbText) dbText.innerText = "เชื่อมต่อฐานข้อมูลแล้ว";
-                    }
-                }
-            } catch (e) { 
-                const dbText = document.getElementById('db-status-text');
-                if(dbText) dbText.innerText = "ออฟไลน์โหมด";
-                console.error("Fetch Data Error: ", e);
-            }
-        }
-
-        // 🌟 ฟังก์ชันรีเฟรชข้อมูลหน้าจอแบบไม่โหลดใหม่ทั้งหมด
-        function refreshAllData(silent = false) {
-            if(!silent) {
-                const btnIcons = document.querySelectorAll('.fa-rotate-right');
-                btnIcons.forEach(icon => icon.classList.add('fa-spin'));
-            }
-            
-            fetchSystemData().then(() => {
-                if(!silent) {
-                    const btnIcons = document.querySelectorAll('.fa-rotate-right');
-                    btnIcons.forEach(icon => icon.classList.remove('fa-spin'));
-                    addNotification('อัปเดตข้อมูลล่าสุดจากเซิร์ฟเวอร์เรียบร้อยแล้ว', 'info');
-                    showToast('ดึงข้อมูลใหม่ล่าสุดสำเร็จ', 'success');
-                }
-                
-                // รีเฟรชเฉพาะแท็บที่เปิดอยู่
-                if (!document.getElementById('view-profile').classList.contains('hidden')) loadMyPlotsData('profile');
-                if (!document.getElementById('view-damage').classList.contains('hidden')) loadMyPlotsData('damage');
-                if (!document.getElementById('view-harvest').classList.contains('hidden')) loadMyPlotsData('harvest');
-                if (!document.getElementById('view-history').classList.contains('hidden')) {
-                    renderHistoryTable();
-                    renderAuditLogs();
-                }
-            });
-        }
-
-        async function initApp() {
-            // โหลดข้อมูลพื้นฐานและฐานข้อมูลสดก่อน
-            await fetchSystemData(); 
-            loadLocationDataFromCSV(); 
-
-            const savedUser = localStorage.getItem('agri_user');
-            if (savedUser) {
-                currentUser = savedUser; currentFullName = localStorage.getItem('agri_user_fullname');
-                document.getElementById('current-username').innerText = currentFullName;
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('app-screen').classList.remove('hidden');
-                
-                setupAdminUI();
-                if(!localStorage.getItem('agri_logs')) localStorage.setItem('agri_logs', JSON.stringify([]));
-                if (document.getElementById('table-body').children.length === 0) addRows(10);
-            }
-        }
-
-        function setupAdminUI() {
-            const agroContainer = document.getElementById('global-agro-container');
-            const adminBadge = document.getElementById('admin-badge');
-            
-            if (isAdmin()) {
-                adminBadge.classList.remove('hidden');
-                let opts = Object.keys(AGRONOMIST_USERS).map(key => `<option value="${AGRONOMIST_USERS[key].fullName}">${AGRONOMIST_USERS[key].fullName}</option>`).join('');
-                agroContainer.innerHTML = `<label class="block text-sm font-semibold text-slate-700 mb-2">ผู้ดูแล (ค่าเริ่มต้น) <span class="text-red-500">*</span></label><select id="global-agronomist" class="input-field bg-amber-50 border-amber-200 font-bold text-amber-800 w-48">${opts}</select>`;
-                document.getElementById('global-agronomist').value = currentFullName;
-                
-                ['pf', 'dm', 'hv'].forEach(prefix => {
-                    const agroFilter = document.getElementById(`${prefix}-filter-agro`);
-                    if(agroFilter) agroFilter.classList.remove('hidden');
-                    const container = document.getElementById(`${prefix}-filters-container`);
-                    if(container) {
-                        container.className = `bg-white border-b border-slate-100 p-4 grid grid-cols-2 gap-3 shrink-0 ${prefix === 'hv' ? 'md:grid-cols-8' : 'md:grid-cols-7'}`;
-                    }
-                });
-            } else {
-                adminBadge.classList.add('hidden');
-                agroContainer.innerHTML = `<label class="block text-sm font-semibold text-slate-700 mb-2">ผู้ดูแล (Agronomist) <span class="text-red-500">*</span></label><input type="text" id="global-agronomist" class="input-field bg-slate-100 font-medium text-brand-dark w-48" value="${currentFullName}" readonly>`;
-                
-                ['pf', 'dm', 'hv'].forEach(prefix => {
-                    const agroFilter = document.getElementById(`${prefix}-filter-agro`);
-                    if(agroFilter) agroFilter.classList.add('hidden');
-                    const container = document.getElementById(`${prefix}-filters-container`);
-                    if(container) {
-                        container.className = `bg-white border-b border-slate-100 p-4 grid grid-cols-2 gap-3 shrink-0 ${prefix === 'hv' ? 'md:grid-cols-7' : 'md:grid-cols-6'}`;
-                    }
-                });
-            }
-        }
-
-        function handleLogin(e) {
-            e.preventDefault();
-            const user = document.getElementById('login-user').value.trim().toLowerCase();
-            const pass = document.getElementById('login-pass').value.trim();
-            if (AGRONOMIST_USERS[user] && AGRONOMIST_USERS[user].pass === pass) {
-                localStorage.setItem('agri_user', user); localStorage.setItem('agri_user_fullname', AGRONOMIST_USERS[user].fullName);
-                initApp(); showToast(`ยินดีต้อนรับคุณ ${AGRONOMIST_USERS[user].fullName}`); logAction('LOGIN', `เข้าสู่ระบบสำเร็จ`);
-            } else { showToast('รหัสผ่านไม่ถูกต้อง', 'error'); }
-        }
-
-        function handleLogout() { 
-            logAction('LOGOUT', 'ออกจากระบบ'); 
-            setTimeout(() => { 
-                localStorage.removeItem('agri_user'); 
-                localStorage.removeItem('agri_user_fullname'); 
-                location.reload(); 
-            }, 500); 
-        }
-
-        function switchView(viewName) {
-            ['entry', 'profile', 'damage', 'harvest', 'history'].forEach(v => {
-                const view = document.getElementById(`view-${v}`);
-                if (view) view.classList.toggle('hidden', viewName !== v);
-                const t1 = document.getElementById(`tab-${v}`);
-                if(t1) { if (viewName === v) t1.classList.add('active'); else t1.classList.remove('active'); }
-            });
-            if (viewName === 'history') { renderHistoryTable(); renderAuditLogs(); }
-            if (viewName === 'profile') loadMyPlotsData('profile');
-            if (viewName === 'damage') loadMyPlotsData('damage');
-            if (viewName === 'harvest') loadMyPlotsData('harvest');
-        }
-        
-        function switchHistoryTab(tabName) {
-            document.getElementById('hview-submissions').classList.toggle('hidden', tabName !== 'submissions');
-            document.getElementById('hview-audits').classList.toggle('hidden', tabName !== 'audits');
-            
-            const tabSub = document.getElementById('htab-submissions'); const tabAud = document.getElementById('htab-audits');
-            
-            if (tabName === 'submissions') {
-                tabSub.className = "pb-3 pt-2 font-semibold text-brand border-b-2 border-brand"; tabAud.className = "pb-3 pt-2 font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-800";
-            } else {
-                tabAud.className = "pb-3 pt-2 font-semibold text-brand border-b-2 border-brand"; tabSub.className = "pb-3 pt-2 font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-800"; renderAuditLogs(); 
-            }
-        }
-
-        // ==========================================
-        // 2. Data Entry Logic
-        // ==========================================
-        function createRowHTML(r, data = {}) {
-            let provOptions = '<option value="">- จังหวัด -</option>';
-            let isProvValid = !data.prov || provinces.includes(data.prov);
-            provinces.forEach(p => { provOptions += `<option value="${p}" ${p==data.prov?'selected':''}>${p}</option>`; });
-            if(!isProvValid && data.prov) provOptions += `<option value="${data.prov}" selected class="text-red-500 font-medium">❌ ${data.prov}</option>`;
-            
-            let varOptions = '<option value="">- สายพันธุ์ -</option>';
-            let matchedVar = varietyOptions.find(opt => opt.toLowerCase() === String(data.var || '').toLowerCase());
-            let isVarValid = !data.var || matchedVar !== undefined;
-            varietyOptions.forEach(v => { varOptions += `<option value="${v}" ${matchedVar===v?'selected':''}>${v}</option>`; });
-            if(!isVarValid && data.var) varOptions += `<option value="${data.var}" selected class="text-red-500 font-medium">❌ ${data.var}</option>`;
-
-            let distOptions = '<option value="">- อำเภอ -</option>';
-            let isDistValid = !data.dist || (data.prov && locationData[data.prov] && Object.keys(locationData[data.prov]).includes(data.dist));
-            if(data.prov && locationData[data.prov]) Object.keys(locationData[data.prov]).forEach(d => { distOptions += `<option value="${d}" ${d==data.dist?'selected':''}>${d}</option>`; });
-            if(!isDistValid && data.dist) distOptions += `<option value="${data.dist}" selected class="text-red-500 font-medium">❌ ${data.dist}</option>`;
-            
-            let subOptions = '<option value="">- ตำบล -</option>';
-            let isSubValid = !data.sub || (data.prov && data.dist && locationData[data.prov] && locationData[data.prov][data.dist] && locationData[data.prov][data.dist].includes(data.sub));
-            if(data.prov && data.dist && locationData[data.prov][data.dist]) locationData[data.prov][data.dist].forEach(s => { subOptions += `<option value="${s}" ${s==data.sub?'selected':''}>${s}</option>`; });
-            if(!isSubValid && data.sub) subOptions += `<option value="${data.sub}" selected class="text-red-500 font-medium">❌ ${data.sub}</option>`;
-
-            let isDup = existingFarmersDB.includes(data.farmer);
-            
-            let defAgro = (data.agronomist || document.getElementById('global-agronomist').value || '').toString().toLowerCase().trim();
-            let agroField = '';
-            
-            if (isAdmin()) {
-                let userOpts = Object.keys(AGRONOMIST_USERS).map(key => {
-                    let uFullName = AGRONOMIST_USERS[key].fullName;
-                    let uFullNameLower = uFullName.toLowerCase();
-                    let isMatch = false;
-                    if (defAgro && (uFullNameLower.includes(defAgro) || defAgro.includes(uFullNameLower))) {
-                        isMatch = true;
-                    }
-                    return `<option value="${uFullName}" ${isMatch ? 'selected' : ''}>${uFullName}</option>`;
-                }).join('');
-                agroField = `<select id="agro-${r}" class="input-field text-brand-dark font-medium px-1"><option value="">- ผู้ดูแล -</option>${userOpts}</select>`;
-            } else {
-                agroField = `<input type="text" id="agro-${r}" value="${currentFullName}" class="input-field bg-slate-50 text-slate-500 px-1" readonly>`;
-            }
-            
-            let typeLow = data.type ? String(data.type).toLowerCase().replace(/[^a-z]/g, '') : '';
-            let tNonContract = typeLow.includes('non') ? 'selected' : '';
-            let tBroker = typeLow.includes('broker') ? 'selected' : '';
-            let tContract = (!tNonContract && !tBroker) ? 'selected' : '';
-
-            let monthSel = monthArray.map(m => {
-                let isSelected = (data.month && data.month.toLowerCase().includes(m.toLowerCase())) ? 'selected' : '';
-                return `<option value="${m}" ${isSelected}>${m}</option>`;
-            }).join('');
-
-            return `
-                <td class="px-1 py-2 text-center text-xs text-slate-400 font-medium">${r}</td>
-                <td class="px-1 py-2">${agroField}</td>
-                <td class="px-1 py-2 relative">
-                    <input type="text" id="farmer-${r}" value="${data.farmer||''}" class="input-field pr-8 ${isDup?'input-warn':''}" placeholder="ชื่อ-สกุล" onblur="checkDuplicateFarmer(${r})">
-                    <i id="warn-icon-${r}" class="fa-solid fa-triangle-exclamation text-amber-500 absolute right-3 top-4 transition-opacity cursor-help ${isDup?'opacity-100':'opacity-0'}" title="พบชื่อนี้ในระบบแล้ว อาจเป็นการลงแปลงซ้ำ"></i>
-                </td>
-                <td class="px-1 py-2"><input type="tel" id="tel-${r}" value="${data.tel||''}" class="input-field text-slate-600 text-xs px-2" placeholder="08X-XXX-XXXX"></td>
-                <td class="px-1 py-2"><input type="text" id="vendor-${r}" value="${data.vendor||''}" class="input-field text-slate-500 text-xs px-2" placeholder="VD-0000"></td>
-                <td class="px-1 py-2">
-                    <select id="type-${r}" class="input-field px-1">
-                        <option value="Contract" ${tContract}>Contract</option>
-                        <option value="Non-Contract" ${tNonContract}>Non-Contract</option>
-                        <option value="Broker" ${tBroker}>Broker</option>
-                    </select>
-                </td>
-                <td class="px-1 py-2"><select id="prov-${r}" class="input-field px-1 ${!isProvValid && data.prov?'input-error':''}" onchange="updateDistricts(${r})">${provOptions}</select></td>
-                <td class="px-1 py-2"><select id="dist-${r}" class="input-field px-1 ${!isDistValid && data.dist?'input-error':''}" onchange="updateSubDistricts(${r})">${distOptions}</select></td>
-                <td class="px-1 py-2"><select id="sub-${r}" class="input-field px-1 ${!isSubValid && data.sub?'input-error':''}" onchange="validateRow(${r})">${subOptions}</select></td>
-                <td class="px-1 py-2">
-                    <select id="irrig-${r}" class="input-field px-1">
-                        <option value="น้ำฝน (Rainfade)" ${data.irrig && data.irrig.toLowerCase().includes('rain')?'selected':''}>น้ำฝน</option>
-                        <option value="น้ำหยด (Drip)" ${data.irrig && data.irrig.toLowerCase().includes('drip')?'selected':''}>น้ำหยด</option>
-                    </select>
-                </td>
-                <td class="px-1 py-2"><select id="var-${r}" class="input-field px-1 ${!isVarValid && data.var?'input-error':''}" onchange="validateRow(${r})">${varOptions}</select></td>
-                <td class="px-1 py-2"><input type="number" id="area-${r}" value="${data.area||''}" step="0.1" min="0" class="input-field text-right font-bold text-brand-dark px-1" placeholder="0.0"></td>
-                <td class="px-1 py-2">
-                    <select id="month-${r}" class="input-field px-1"><option value="">- เดือน -</option>
-                        ${monthSel}
-                    </select>
-                </td>
-                <td class="px-1 py-2 text-center"><button onclick="deleteRow(${r})" class="w-8 h-8 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"><i class="fa-solid fa-trash-can"></i></button></td>
-            `;
-        }
-
-        function addRows(c=1) { for(let i=0;i<c;i++){ rowCounter++; const tr = document.createElement('tr'); tr.id = `row-${rowCounter}`; tr.className = "hover:bg-slate-50/50 transition-colors group"; tr.innerHTML = createRowHTML(rowCounter); document.getElementById('table-body').appendChild(tr); } updateRowCount(); }
-        function deleteRow(id) { document.getElementById(`row-${id}`).remove(); updateRowCount(); }
-        function formatRaiNumber(value) {
-            const num = Number(value) || 0;
-            return num.toLocaleString('th-TH', { maximumFractionDigits: 2 });
-        }
-
-        function updateEntrySummary() {
-            const tbody = document.getElementById('table-body');
-            const rows = tbody ? Array.from(tbody.children) : [];
-            let totalArea = 0;
-
-            rows.forEach(tr => {
-                const areaInput = tr.querySelector('input[id^="area-"]');
-                if (!areaInput) return;
-                const area = parseFloat(String(areaInput.value || '').replace(/,/g, ''));
-                if (!isNaN(area)) totalArea += area;
-            });
-
-            const rowCountEl = document.getElementById('row-count');
-            const totalAreaEl = document.getElementById('total-planting-area');
-            if (rowCountEl) rowCountEl.innerText = rows.length;
-            if (totalAreaEl) totalAreaEl.innerText = formatRaiNumber(totalArea);
-        }
-
-        function updateRowCount() { updateEntrySummary(); }
-
-        document.addEventListener('input', function(e) {
-            if (e.target && e.target.id && e.target.id.startsWith('area-')) {
-                updateEntrySummary();
-            }
-        });
-
-        function updateDistricts(r, preVal=null) {
-            const p = document.getElementById(`prov-${r}`).value;
-            const dSel = document.getElementById(`dist-${r}`); dSel.innerHTML = '<option value="">- อำเภอ -</option>'; 
-            document.getElementById(`sub-${r}`).innerHTML = '<option value="">- ตำบล -</option>';
-            let found = false;
-            if(p && locationData[p]) {
-                Object.keys(locationData[p]).forEach(d => { dSel.innerHTML += `<option value="${d}">${d}</option>`; if(d === preVal) found = true; });
-            }
-            if(preVal) { if(!found) dSel.innerHTML += `<option value="${preVal}" class="text-red-500 font-medium">❌ ${preVal}</option>`; dSel.value = preVal; }
-            validateRow(r);
-        }
-
-        function updateSubDistricts(r, preVal=null) {
-            const p = document.getElementById(`prov-${r}`).value; const d = document.getElementById(`dist-${r}`).value;
-            const sSel = document.getElementById(`sub-${r}`); sSel.innerHTML = '<option value="">- ตำบล -</option>';
-            let found = false;
-            if(p && d && locationData[p] && locationData[p][d]) {
-                locationData[p][d].forEach(s => { sSel.innerHTML += `<option value="${s}">${s}</option>`; if(s === preVal) found = true; });
-            }
-            if(preVal) { if(!found) sSel.innerHTML += `<option value="${preVal}" class="text-red-500 font-medium">❌ ${preVal}</option>`; sSel.value = preVal; }
-            validateRow(r);
-        }
-
-        function validateRow(r) {
-            let e=0, w=0;
-            const f = document.getElementById(`farmer-${r}`); const p = document.getElementById(`prov-${r}`); const d = document.getElementById(`dist-${r}`);
-            const s = document.getElementById(`sub-${r}`); const v = document.getElementById(`var-${r}`); const i = document.getElementById(`warn-icon-${r}`);
-            
-            if(f) f.classList.remove('input-error','input-warn'); 
-            if(p) p.classList.remove('input-error'); if(d) d.classList.remove('input-error');
-            if(s) s.classList.remove('input-error'); if(v) v.classList.remove('input-error');
-            
-            [p,d,s,v].forEach(el => {
-                if (el && el.options) { Array.from(el.options).forEach(opt => { if (opt.value !== el.value && opt.text.includes('❌')) el.removeChild(opt); }); }
-            });
-            if(i) i.style.opacity = '0';
-
-            if(f && f.value && existingFarmersDB.includes(f.value)) { f.classList.add('input-warn'); if(i) i.style.opacity = '1'; w++; }
-            
-            if(p && p.value && (!provinces.includes(p.value) || (p.options[p.selectedIndex] && p.options[p.selectedIndex].text.includes('❌')))) { p.classList.add('input-error'); e++; }
-            if(d && d.value && (!locationData[p.value] || !Object.keys(locationData[p.value]).includes(d.value) || (d.options[d.selectedIndex] && d.options[d.selectedIndex].text.includes('❌')))) { d.classList.add('input-error'); e++; }
-            if(s && s.value && (!locationData[p.value] || !locationData[p.value][d.value] || !locationData[p.value][d.value].includes(s.value) || (s.options[s.selectedIndex] && s.options[s.selectedIndex].text.includes('❌')))) { s.classList.add('input-error'); e++; }
-            
-            if(v && v.value) {
-                let matchedVar = varietyOptions.find(opt => opt.toLowerCase() === String(v.value).toLowerCase());
-                if(!matchedVar || (v.options[v.selectedIndex] && v.options[v.selectedIndex].text.includes('❌'))) { v.classList.add('input-error'); e++; }
-            }
-            return {hasError: e>0, hasWarning: w>0};
-        }
-
-        function checkDuplicateFarmer(rowId) {
-            const farmerName = document.getElementById(`farmer-${rowId}`).value.trim();
-            const errStatus = validateRow(rowId);
-            if(errStatus.hasWarning) {
-                if (isAdmin() && farmerToAgroMap[farmerName]) {
-                    const agroSel = document.getElementById(`agro-${rowId}`);
-                    if (agroSel && agroSel.value !== farmerToAgroMap[farmerName]) {
-                        agroSel.value = farmerToAgroMap[farmerName];
-                        addNotification(`ระบบดึงชื่อผู้ดูแล (${farmerToAgroMap[farmerName]}) ให้อัตโนมัติสำหรับเกษตรกร: ${farmerName}`, 'info');
-                    }
-                } else { addNotification(`แจ้งเตือน: พบชื่อ "${farmerName}" ในระบบแล้ว`, 'warning'); }
-            }
-        }
-
-        function updateAllProvinceDropdowns() {
-            Array.from(document.getElementById('table-body').children).forEach(tr => {
-                const r = tr.id.split('-')[1], pSel = document.getElementById(`prov-${r}`);
-                const cur = pSel.value; pSel.innerHTML = '<option value="">- จังหวัด -</option>';
-                provinces.forEach(p => pSel.innerHTML += `<option value="${p}" ${p===cur?'selected':''}>${p}</option>`);
-            });
-        }
-
-        // ระบบดึง CSV เฉพาะการนำเข้าไฟล์ของตัวเอง
-        function processImportCSV(e) {
-            const file = e.target.files[0]; if(!file) return;
-            Papa.parse(file, { 
-                header: true, skipEmptyLines: true, 
-                complete: function(res) {
-                    if (!res.data || res.data.length === 0) { showToast('ไม่พบข้อมูลในไฟล์ CSV', 'error'); return; }
-
-                    document.getElementById('table-body').innerHTML = ''; 
-                    rowCounter = 0; let eCnt=0, wCnt=0, skippedCount=0;
-                    
-                    res.data.forEach((row, index) => {
-                        try {
-                            const keys = Object.keys(row);
-                            
-                            const getValStrict = (keywords, exclude = []) => {
-                                const k = keys.find(key => {
-                                    const cleanKey = String(key).toLowerCase().replace(/\s+/g,'');
-                                    const match = keywords.some(kw => cleanKey.includes(kw.toLowerCase().replace(/\s+/g,'')));
-                                    const excluded = exclude.length > 0 && exclude.some(ex => cleanKey.includes(ex.toLowerCase().replace(/\s+/g,'')));
-                                    return match && !excluded;
-                                });
-                                return k ? row[k] : '';
-                            };
-                            
-                            let fName = String(getValStrict(['farmername', 'farmer', 'ชื่อเกษตรกร'])).trim();
-                            if(!fName) { skippedCount++; return; }
-
-                            rowCounter++; const r = rowCounter;
-                            
-                            let rawVar = '';
-                            let varKeys = keys.filter(k => {
-                                let cleanK = String(k).toLowerCase().replace(/\s+/g,'');
-                                return cleanK.includes('waxytype') || cleanK.includes('variety') || cleanK.includes('สายพันธุ์') || cleanK.includes('allwaxy');
-                            });
-                            for (let vk of varKeys) {
-                                if (row[vk] && String(row[vk]).trim() !== '') { rawVar = String(row[vk]).trim(); break; }
-                            }
-                            
-                            let cVar = rawVar;
-                            if (!isNaN(rawVar) && rawVar !== '') cVar = `HBwx${rawVar}`; 
-                            else if (rawVar.toLowerCase().includes('waxy')) cVar = 'Waxy';
-                            
-                            let areaRaw = String(getValStrict(['plantingarea', 'area', 'rai', 'พื้นที่', 'ไร่'], ['damage', 'harvest', 'เสียหาย', 'เกี่ยว', 'คงเหลือ'])).replace(/,/g, '').trim();
-
-                            let rowAgro = String(getValStrict(['agronomistname', 'agronomist', 'ผู้ดูแล'])).trim();
-                            if (!rowAgro && farmerToAgroMap[fName]) rowAgro = farmerToAgroMap[fName];
-                            if (!rowAgro) rowAgro = document.getElementById('global-agronomist').value;
-
-                            let mapped = {
-                                agronomist: rowAgro, farmer: fName, 
-                                tel: String(getValStrict(['tel', 'phone', 'เบอร์โทร', 'เบอร์', 'โทร'])).trim(),
-                                vendor: String(getValStrict(['vendorcode', 'vendor', 'รหัส'])).trim(),
-                                type: String(getValStrict(['farmertype', 'type', 'ประเภท'])) || 'Contract',
-                                prov: String(getValStrict(['province', 'จังหวัด'])).trim(),
-                                dist: String(getValStrict(['district', 'อำเภอ'])).trim(),
-                                sub: String(getValStrict(['subdistrict', 'local', 'ตำบล', 'sub'])).trim(),
-                                irrig: String(getValStrict(['irrigationsystem', 'irrigation', 'ระบบน้ำ'])) || 'Rainfade',
-                                var: cVar, area: parseFloat(areaRaw) || '', 
-                                month: String(getValStrict(['plantingmonth', 'month', 'เดือน'], ['harvest', 'เกี่ยว'])).trim()
-                            };
-                            
-                            const tr = document.createElement('tr'); tr.id=`row-${r}`; tr.className = "hover:bg-slate-50 transition-colors group";
-                            tr.innerHTML=createRowHTML(r, mapped); document.getElementById('table-body').appendChild(tr);
-                            
-                            updateDistricts(r, mapped.dist); updateSubDistricts(r, mapped.sub);
-                            const st = validateRow(r); 
-                            if(st.hasError) eCnt++; if(st.hasWarning) wCnt++;
-                        } catch(err) { skippedCount++; }
-                    });
-                    
-                    updateRowCount(); document.getElementById('import-csv-file').value = '';
-                    let reportMsg = `ดึงข้อมูลสำเร็จ ${rowCounter} รายการ `;
-                    if(skippedCount > 0) reportMsg += `\n(ข้ามบรรทัดว่าง/ข้อมูลขยะ ${skippedCount} รายการ) `;
-                    if(eCnt > 0 || wCnt > 0) reportMsg += `\n⚠️ พบจุดที่ต้องแก้ไข ${eCnt} จุด, ชื่อซ้ำ ${wCnt} จุด`;
-                    
-                    if(eCnt>0 || wCnt>0) showToast(reportMsg, 'warning');
-                    else if (rowCounter > 0) showToast(reportMsg, 'success');
-                    else showToast(`ไม่พบข้อมูลที่ตรงกับแบบฟอร์มในไฟล์นี้เลย`, 'error');
-                }
-            });
-        }
-
-        // ==========================================
-        // 3. PROFILE, DAMAGE & HARVEST REPORTING LOGIC
-        // ==========================================
-        function getCropAgeCurrent(plantMonthStr, seasonStr) {
-            if(!plantMonthStr || plantMonthStr === '-' || !seasonStr) return -1;
-            let pmIdx = monthArray.findIndex(m => m.toLowerCase() === plantMonthStr.toLowerCase().substring(0,3));
-            if(pmIdx === -1) return -1;
-
-            let pYear = parseInt(seasonStr.substring(0,4)); 
-            if(isNaN(pYear)) return -1;
-
-            let now = new Date();
-            let currentYear = now.getFullYear();
-            let currentMonth = now.getMonth();
-            let age = (currentYear - pYear) * 12 + (currentMonth - pmIdx);
-            return age >= 0 ? age : 0; 
-        }
-
-        function isMyPlot(row) {
-            if (isAdmin()) return true; 
-            let agroName = String(row.agronomist).trim().toLowerCase();
-            let cName = String(currentFullName).trim().toLowerCase();
-            let cUser = String(currentUser).trim().toLowerCase();
-            if(!agroName) return false;
-            return agroName === cName || agroName === cUser || cName.includes(agroName) || agroName.includes(cName);
-        }
-
-        function loadMyPlotsData(tabType = 'damage') {
-            // โหลดจาก masterData ที่ดึงสดๆ จาก API แล้วประมวลผลทันที
-            routeTabData(tabType, masterData);
-        }
-
-        function routeTabData(tabType, data) {
-            if(tabType === 'profile') processProfileData(data);
-            else if(tabType === 'damage') processDamageData(data);
-            else if(tabType === 'harvest') processHarvestData(data);
-        }
-
-        function initTabFilters(tabPrefix) {
-            const getUnique = (key) => [...new Set(myPlotsData.map(r => r[key] || ''))].filter(v => v !== '').sort();
-            
-            const seasons = getUnique('season');
-            const provs = getUnique('prov');
-            const vars = getUnique('variety');
-
-            const sSel = document.getElementById(`${tabPrefix}-filter-season`);
-            sSel.innerHTML = '<option value="All">- ปีปลูกทั้งหมด -</option>';
-            seasons.forEach(s => sSel.innerHTML += `<option value="${s}">${s}</option>`);
-
-            const pSel = document.getElementById(`${tabPrefix}-filter-prov`);
-            pSel.innerHTML = '<option value="All">- จังหวัดทั้งหมด -</option>';
-            provs.forEach(p => pSel.innerHTML += `<option value="${p}">${p}</option>`);
-            
-            const vSel = document.getElementById(`${tabPrefix}-filter-var`);
-            if(vSel) {
-                vSel.innerHTML = '<option value="All">- สายพันธุ์ทั้งหมด -</option>';
-                vars.forEach(v => vSel.innerHTML += `<option value="${v}">${v}</option>`);
-            }
-            
-            if (isAdmin()) {
-                const agros = getUnique('agronomist');
-                const aSel = document.getElementById(`${tabPrefix}-filter-agro`);
-                aSel.innerHTML = '<option value="All">- ผู้ดูแลทั้งหมด -</option>';
-                agros.forEach(a => aSel.innerHTML += `<option value="${a}">${a}</option>`);
-            }
-        }
-
-        function updateTabDist(tabPrefix) {
-            const prov = document.getElementById(`${tabPrefix}-filter-prov`).value;
-            const dSel = document.getElementById(`${tabPrefix}-filter-dist`);
-            const sSel = document.getElementById(`${tabPrefix}-filter-sub`);
-            dSel.innerHTML = '<option value="All">- อำเภอทั้งหมด -</option>'; sSel.innerHTML = '<option value="All">- ตำบลทั้งหมด -</option>';
-            if (prov !== 'All') {
-                const dists = [...new Set(myPlotsData.filter(r => r.prov === prov).map(r => r.dist || ''))].filter(v=>v!=='').sort();
-                dists.forEach(d => dSel.innerHTML += `<option value="${d}">${d}</option>`);
-            }
-        }
-
-        function updateTabSub(tabPrefix) {
-            const prov = document.getElementById(`${tabPrefix}-filter-prov`).value, dist = document.getElementById(`${tabPrefix}-filter-dist`).value;
-            const sSel = document.getElementById(`${tabPrefix}-filter-sub`); sSel.innerHTML = '<option value="All">- ตำบลทั้งหมด -</option>';
-            if (prov !== 'All' && dist !== 'All') {
-                const subs = [...new Set(myPlotsData.filter(r => r.prov === prov && r.dist === dist).map(r => r.sub || ''))].filter(v=>v!=='').sort();
-                subs.forEach(s => sSel.innerHTML += `<option value="${s}">${s}</option>`);
-            }
-        }
-
-        // --- PROFILE LOGIC ---
-        function exportProfileCSV() {
-            const term = document.getElementById('search-profile').value.toLowerCase();
-            const fSeason = document.getElementById('pf-filter-season').value;
-            const fProv = document.getElementById('pf-filter-prov').value;
-            const fDist = document.getElementById('pf-filter-dist').value;
-            const fSub = document.getElementById('pf-filter-sub').value;
-            const fVar = document.getElementById('pf-filter-var').value;
-            const fAgro = isAdmin() ? document.getElementById('pf-filter-agro').value : 'All';
-
-            const filtered = myPlotsData.filter(r => {
-                let fName = r.farmer || '';
-                let tel = r.tel || '';
-                let match = String(fName).toLowerCase().includes(term) || String(tel).toLowerCase().includes(term);
-                
-                if(fSeason !== 'All') match = match && String(r.season).includes(fSeason);
-                if(fVar !== 'All') match = match && String(r.variety).includes(fVar);
-                if(fProv !== 'All') match = match && String(r.prov).includes(fProv);
-                if(fDist !== 'All') match = match && String(r.dist).includes(fDist);
-                if(fSub !== 'All') match = match && String(r.sub).includes(fSub);
-                if(fAgro !== 'All') match = match && String(r.agronomist).includes(fAgro);
-                return match;
-            });
-
-            if(filtered.length === 0) {
-                showToast('ไม่มีข้อมูลสำหรับ Export', 'warning'); return;
-            }
-
-            const headers = ["ผู้ดูแล", "ชื่อเกษตรกร", "เบอร์โทร", "จังหวัด", "อำเภอ", "ตำบล", "สายพันธุ์", "เดือนปลูก", "พื้นที่ (ไร่)", "สถานะแปลง"];
-            let csvContent = headers.join(',') + '\n';
-
-            filtered.forEach(row => {
-                let farmer = row.farmer || '-'; 
-                let agro = row.agronomist || '-';
-                let tel = row.tel || '-';
-                let prov = row.prov || '-'; 
-                let dist = row.dist || '-'; 
-                let sub = row.sub || '-';
-                let variety = row.variety || '-'; 
-                let area = parseFloat(row.area) || 0;
-                let month = row.month || '-';
-                
-                let dmArea = parseFloat(row.damagedarea) || 0;
-                let hvArea = parseFloat(row.harvestedarea) || 0;
-                
-                let status = 'ปกติ';
-                if(hvArea > 0) status = 'เก็บเกี่ยวแล้ว';
-                else if(dmArea > 0) status = 'เสียหาย';
-
-                const values = [agro, farmer, tel, prov, dist, sub, variety, month, area, status].map(val => {
-                    let strVal = String(val || '');
-                    if (strVal.includes(',') || strVal.includes('"')) strVal = `"${strVal.replace(/"/g, '""')}"`;
-                    return strVal;
-                });
-                csvContent += values.join(',') + '\n';
-            });
-
-            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob); 
-            const link = document.createElement("a");
-            link.setAttribute("href", url); 
-            link.setAttribute("download", `PlotProfile_Export_${new Date().toISOString().slice(0,10).replace(/-/g, '')}.csv`);
-            document.body.appendChild(link); 
-            link.click(); document.body.removeChild(link);
-        }
-
-
-
-        // --- SUMMARY PANELS: update totals under filters ---
-        function formatSummaryNumber(value) {
-            const num = Number(value) || 0;
-            return num.toLocaleString('th-TH', { maximumFractionDigits: 1 });
-        }
-
-        function sumField(data, fieldName) {
-            return data.reduce((sum, row) => sum + (parseFloat(row[fieldName]) || 0), 0);
-        }
-
-        function updateFilterSummary(prefix, data) {
-            const safeData = Array.isArray(data) ? data : [];
-            const setText = (id, value) => {
-                const el = document.getElementById(id);
-                if (el) el.innerText = formatSummaryNumber(value);
-            };
-
-            const totalArea = sumField(safeData, 'area');
-            const damagedArea = sumField(safeData, 'damagedarea');
-            const harvestedArea = sumField(safeData, 'harvestedarea');
-            const tons = sumField(safeData, 'tons');
-            const activeArea = safeData.reduce((sum, row) => {
-                const area = parseFloat(row.area) || 0;
-                const damage = parseFloat(row.damagedarea) || 0;
-                return sum + Math.max(0, area - damage);
-            }, 0);
-            const remainingHarvestArea = safeData.reduce((sum, row) => {
-                const area = parseFloat(row.area) || 0;
-                const damage = parseFloat(row.damagedarea) || 0;
-                const harvested = parseFloat(row.harvestedarea) || 0;
-                return sum + Math.max(0, area - damage - harvested);
-            }, 0);
-
-            setText(`${prefix}-summary-count`, safeData.length);
-            setText(`${prefix}-summary-area`, totalArea);
-            setText(`${prefix}-summary-damage`, damagedArea);
-            setText(`${prefix}-summary-active`, activeArea);
-            setText(`${prefix}-summary-harvested`, harvestedArea);
-            setText(`${prefix}-summary-remaining`, remainingHarvestArea);
-            setText(`${prefix}-summary-tons`, tons);
-        }
-
-        function processProfileData(data) {
-            myPlotsData = data.filter(row => isMyPlot(row));
-            initTabFilters('pf');
-            resetPfFilters();
-        }
-
-        function resetPfFilters() {
-            document.getElementById('search-profile').value = '';
-            ['season', 'var', 'prov'].forEach(id => document.getElementById(`pf-filter-${id}`).value = 'All');
-            ['dist', 'sub'].forEach(id => document.getElementById(`pf-filter-${id}`).innerHTML = `<option value="All">- ${id==='dist'?'อำเภอ':'ตำบล'}ทั้งหมด -</option>`);
-            if(isAdmin()) document.getElementById('pf-filter-agro').value = 'All';
-            filterProfileTable();
-        }
-
-        function filterProfileTable() {
-            const term = document.getElementById('search-profile').value.toLowerCase();
-            const fSeason = document.getElementById('pf-filter-season').value;
-            const fProv = document.getElementById('pf-filter-prov').value;
-            const fDist = document.getElementById('pf-filter-dist').value;
-            const fSub = document.getElementById('pf-filter-sub').value;
-            const fVar = document.getElementById('pf-filter-var').value;
-            const fAgro = isAdmin() ? document.getElementById('pf-filter-agro').value : 'All';
-
-            const filtered = myPlotsData.filter(r => {
-                let fName = r.farmer || '';
-                let tel = r.tel || '';
-                let match = String(fName).toLowerCase().includes(term) || String(tel).toLowerCase().includes(term);
-                
-                if(fSeason !== 'All') match = match && String(r.season).includes(fSeason);
-                if(fVar !== 'All') match = match && String(r.variety).includes(fVar);
-                if(fProv !== 'All') match = match && String(r.prov).includes(fProv);
-                if(fDist !== 'All') match = match && String(r.dist).includes(fDist);
-                if(fSub !== 'All') match = match && String(r.sub).includes(fSub);
-                if(fAgro !== 'All') match = match && String(r.agronomist).includes(fAgro);
-                return match;
-            });
-            updateFilterSummary('pf', filtered);
-            renderProfileTable(filtered);
-        }
-
-        function renderProfileTable(data) {
-            const tbody = document.getElementById('profile-table-body');
-            tbody.innerHTML = '';
-            if(data.length === 0) { tbody.innerHTML = `<tr><td colspan="10" class="text-center p-8 text-slate-400">ไม่พบรายชื่อเกษตรกรตามเงื่อนไข</td></tr>`; return; }
-
-            window.currentProfileDataView = [];
-
-            data.forEach((row, i) => {
-                let farmer = row.farmer || '-'; 
-                let agro = row.agronomist || '-';
-                let tel = row.tel || '-';
-                let vendor = row.vendor || '';
-                let type = row.type || '';
-                let irrig = row.irrig || '';
-                let prov = row.prov || ''; 
-                let dist = row.dist || ''; 
-                let sub = row.sub || '';
-                
-                let variety = row.variety || ''; 
-                let isVarMissing = !variety || variety === '-' || variety.trim() === '';
-
-                let area = parseFloat(row.area);
-                let isAreaMissing = isNaN(area) || area <= 0;
-
-                let month = row.month || '';
-                let isMonthMissing = !month || month === '-' || month.trim() === '';
-
-                let hasMissing = isVarMissing || isAreaMissing || isMonthMissing;
-
-                let season = row.season || '';
-                let currentAge = getCropAgeCurrent(month, season);
-                let ageText = currentAge >= 0 ? `อายุ ${currentAge} ด.` : '';
-                
-                let dmArea = parseFloat(row.damagedarea) || 0;
-                let dmCause = row.damagecause || '';
-                
-                let hvArea = parseFloat(row.harvestedarea) || 0;
-                let hvTons = parseFloat(row.tons) || 0;
-                let hvMonth = row.harvestmonth || '';
-                let starch = row.starch || ''; // 🌟 ดึงข้อมูล % แป้งมาโชว์
-                
-                let remainAreaRaw = row.remainingarea;
-                let remainArea = (remainAreaRaw && remainAreaRaw !== '-') ? parseFloat(remainAreaRaw) : (area - hvArea);
-
-                let statusBadge = ''; let noteText = '';
-
-                if (hvArea > 0) {
-                    if (remainArea <= 0 || isNaN(remainArea)) {
-                        statusBadge = '<span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[10px] font-bold border border-emerald-200 shadow-sm"><i class="fa-solid fa-check-circle mr-1"></i> เก็บเกี่ยวแล้วเสร็จ</span>';
-                        noteText = `<span class="text-emerald-700 font-medium">ได้ผลผลิต ${hvTons} ตัน<br>แป้ง ${starch?starch+'%':'-'} (${hvMonth})</span>`;
-                    } else {
-                        statusBadge = '<span class="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-[10px] font-bold border border-amber-200"><i class="fa-solid fa-truck-field mr-1"></i> ทยอยเก็บเกี่ยว</span>';
-                        noteText = `<span class="text-amber-600 font-medium">เกี่ยวแล้ว ${hvArea} ไร่<br>(เหลือ ${remainArea.toFixed(1)} ไร่)</span>`;
-                    }
-                } else if (dmArea > 0) {
-                    statusBadge = '<span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-[10px] font-bold border border-red-200"><i class="fa-solid fa-house-crack mr-1"></i> เสียหาย</span>';
-                    noteText = `<span class="text-red-600 font-medium">เสียหาย ${dmArea} ไร่ (${dmCause})</span>`;
-                } else {
-                    statusBadge = '<span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-[10px] font-bold border border-blue-200"><i class="fa-solid fa-seedling mr-1"></i> ปกติ</span>';
-                    noteText = `<span class="text-slate-500 font-medium">${ageText}</span>`;
-                }
-
-                if (hasMissing) {
-                    statusBadge = '<span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-[10px] font-bold border border-red-200 animate-pulse"><i class="fa-solid fa-triangle-exclamation mr-1"></i> ข้อมูลไม่ครบ</span><br><div class="mt-1"></div>' + statusBadge;
-                }
-
-                window.currentProfileDataView.push({
-                    farmer, agro, tel, vendor, type, prov, dist, sub, irrig, variety, area, month
-                });
-
-                const tr = document.createElement('tr'); tr.className = "hover:bg-slate-50 transition-colors";
-                tr.innerHTML = `
-                    <td class="p-3 text-center text-xs text-slate-500">${i+1}</td>
-                    <td class="p-3 text-xs font-medium text-brand truncate max-w-[120px]" title="${agro}">${agro}</td>
-                    <td class="p-3 font-bold text-slate-800">${farmer}</td>
-                    <td class="p-3 text-xs font-medium text-slate-600">${tel}</td>
-                    <td class="p-3 text-xs text-slate-600">ต.${sub} อ.${dist} จ.${prov}</td>
-                    <td class="p-3 text-center text-sm font-medium ${isVarMissing ? 'text-red-500 font-bold' : 'text-slate-600'}">${variety || '❓ ขาดข้อมูล'}</td>
-                    <td class="p-3 text-center font-bold ${isMonthMissing ? 'text-red-500' : 'text-slate-700 bg-slate-100/50'}">${month || '❓'}</td>
-                    <td class="p-3 text-right font-medium ${isAreaMissing ? 'text-red-500' : 'text-brand'}">${area ? area.toLocaleString() : '❓'}</td>
-                    <td class="p-3 text-center leading-relaxed">${statusBadge}</td>
-                    <td class="p-3 text-center">
-                        <button onclick="openProfileModal(${i})" class="px-2 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white border border-blue-200 rounded-lg text-xs font-bold transition-colors shadow-sm w-full">
-                            <i class="fa-solid fa-pen mr-1"></i>แก้ไข
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function updateModalDist() {
-            const p = document.getElementById('modal-prov').value;
-            const dSel = document.getElementById('modal-dist');
-            const sSel = document.getElementById('modal-sub');
-            dSel.innerHTML = '<option value="">- อำเภอ -</option>'; sSel.innerHTML = '<option value="">- ตำบล -</option>';
-            if(p && locationData[p]) {
-                Object.keys(locationData[p]).forEach(d => dSel.innerHTML += `<option value="${d}">${d}</option>`);
-            }
-        }
-
-        function updateModalSub() {
-            const p = document.getElementById('modal-prov').value; const d = document.getElementById('modal-dist').value;
-            const sSel = document.getElementById('modal-sub'); sSel.innerHTML = '<option value="">- ตำบล -</option>';
-            if(p && d && locationData[p] && locationData[p][d]) {
-                locationData[p][d].forEach(s => sSel.innerHTML += `<option value="${s}">${s}</option>`);
-            }
-        }
-
-        function openProfileModal(index) {
-            const data = window.currentProfileDataView[index];
-            if(!data) return;
-
-            document.getElementById('modal-old-farmer').value = data.farmer;
-            document.getElementById('modal-agro').value = data.agro;
-            
-            document.getElementById('modal-farmer').value = data.farmer !== '-' ? data.farmer : '';
-            document.getElementById('modal-tel').value = data.tel !== '-' ? data.tel : '';
-            document.getElementById('modal-vendor').value = data.vendor;
-            
-            let tType = data.type || 'Contract';
-            document.getElementById('modal-type').innerHTML = `
-                <option value="Contract" ${tType.includes('Non')?'':'selected'}>Contract</option>
-                <option value="Non-Contract" ${tType.includes('Non')?'selected':''}>Non-Contract</option>
-                <option value="Broker" ${tType.includes('Broker')?'selected':''}>Broker</option>
-            `;
-
-            let pSel = document.getElementById('modal-prov');
-            pSel.innerHTML = '<option value="">- จังหวัด -</option>';
-            provinces.forEach(p => pSel.innerHTML += `<option value="${p}" ${p===data.prov?'selected':''}>${p}</option>`);
-            updateModalDist();
-            
-            let dSel = document.getElementById('modal-dist');
-            if(data.dist && Array.from(dSel.options).some(o => o.value === data.dist)) dSel.value = data.dist;
-            else if(data.dist) dSel.innerHTML += `<option value="${data.dist}" selected>${data.dist}</option>`;
-            updateModalSub();
-            
-            let sSel = document.getElementById('modal-sub');
-            if(data.sub && Array.from(sSel.options).some(o => o.value === data.sub)) sSel.value = data.sub;
-            else if(data.sub) sSel.innerHTML += `<option value="${data.sub}" selected>${data.sub}</option>`;
-
-            let ir = data.irrig || '';
-            document.getElementById('modal-irrig').innerHTML = `
-                <option value="น้ำฝน (Rainfade)" ${ir.includes('Drip')?'':'selected'}>น้ำฝน (Rainfade)</option>
-                <option value="น้ำหยด (Drip)" ${ir.includes('Drip')?'selected':''}>น้ำหยด (Drip)</option>
-            `;
-
-            let vSel = document.getElementById('modal-var');
-            vSel.innerHTML = '<option value="">- สายพันธุ์ -</option>';
-            varietyOptions.forEach(v => vSel.innerHTML += `<option value="${v}" ${v===data.variety?'selected':''}>${v}</option>`);
-
-            document.getElementById('modal-area').value = data.area || '';
-
-            let mSel = document.getElementById('modal-month');
-            mSel.innerHTML = '<option value="">- เดือน -</option>';
-            monthArray.forEach(m => mSel.innerHTML += `<option value="${m}" ${m===data.month?'selected':''}>${m}</option>`);
-
-            document.getElementById('edit-profile-modal').classList.remove('hidden');
-        }
-
-        function closeProfileModal() {
-            document.getElementById('edit-profile-modal').classList.add('hidden');
-        }
-
-        function submitProfileModal() {
-            const farmer = document.getElementById('modal-farmer').value.trim();
-            const area = document.getElementById('modal-area').value;
-            const month = document.getElementById('modal-month').value;
-            const variety = document.getElementById('modal-var').value;
-
-            if(!farmer) { showToast('กรุณาระบุชื่อเกษตรกร', 'error'); return; }
-            if(!area || parseFloat(area) <= 0) { showToast('กรุณาระบุพื้นที่ (ไร่)', 'error'); return; }
-            if(!month) { showToast('กรุณาระบุเดือนที่ปลูก', 'error'); return; }
-            if(!variety) { showToast('กรุณาระบุสายพันธุ์', 'error'); return; }
-
-            const payload = {
-                action: "UPDATE_PROFILE",
-                agronomist: document.getElementById('modal-agro').value,
-                oldFarmer: document.getElementById('modal-old-farmer').value,
-                updates: {
-                    farmer: farmer, tel: document.getElementById('modal-tel').value.trim(),
-                    vendor: document.getElementById('modal-vendor').value.trim(),
-                    type: document.getElementById('modal-type').value, prov: document.getElementById('modal-prov').value,
-                    dist: document.getElementById('modal-dist').value, sub: document.getElementById('modal-sub').value,
-                    irrig: document.getElementById('modal-irrig').value, variety: variety,
-                    area: parseFloat(area), month: month
-                }
-            };
-
-            const btn = document.getElementById('btn-modal-save');
-            btn.innerHTML = '<i class="fa-spin fa-solid fa-spinner"></i> กำลังบันทึก...'; 
-            btn.disabled = true;
-
-            fetch(GAS_API_URL, { 
-                method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow', body: JSON.stringify(payload) 
-            })
-            .then(r => r.json())
-            .then(res => {
-                if(res.status === 'success') {
-                    showSuccessModal('อัปเดตสำเร็จ', `ข้อมูลของเกษตรกร "${farmer}" ถูกแก้ไขเรียบร้อยแล้ว`);
-                    logAction('UPDATE', `แก้ไขข้อมูลแปลงแบบเต็ม (เกษตรกร: ${farmer})`);
-                    closeProfileModal();
-                    refreshAllData(true); // 🌟 Auto refresh in background
-                } else { 
-                    showToast(res.message, 'error'); 
-                }
-            })
-            .catch(e => { showToast('เครือข่ายขัดข้อง กรุณาลองใหม่', 'warning'); })
-            .finally(() => {
-                btn.innerHTML = '<i class="fa-solid fa-save mr-2"></i> บันทึกการแก้ไข'; 
-                btn.disabled = false; 
-            });
-        }
-
-        // --- DAMAGE LOGIC ---
-        function processDamageData(data) {
-            myPlotsData = data.filter(row => isMyPlot(row));
-            initTabFilters('dm');
-            resetDmFilters();
-        }
-
-        function resetDmFilters() {
-            document.getElementById('search-damage').value = '';
-            ['season', 'var', 'prov'].forEach(id => document.getElementById(`dm-filter-${id}`).value = 'All');
-            ['dist', 'sub'].forEach(id => document.getElementById(`dm-filter-${id}`).innerHTML = `<option value="All">- ${id==='dist'?'อำเภอ':'ตำบล'}ทั้งหมด -</option>`);
-            if(isAdmin()) document.getElementById('dm-filter-agro').value = 'All';
-            filterDamageTable();
-        }
-
-        function filterDamageTable() {
-            const term = document.getElementById('search-damage').value.toLowerCase();
-            const fSeason = document.getElementById('dm-filter-season').value;
-            const fProv = document.getElementById('dm-filter-prov').value;
-            const fDist = document.getElementById('dm-filter-dist').value;
-            const fSub = document.getElementById('dm-filter-sub').value;
-            const fVar = document.getElementById('dm-filter-var').value;
-            const fAgro = isAdmin() ? document.getElementById('dm-filter-agro').value : 'All';
-
-            const filtered = myPlotsData.filter(r => {
-                let fName = r.farmer || '';
-                let tel = r.tel || '';
-                let match = String(fName).toLowerCase().includes(term) || String(tel).toLowerCase().includes(term);
-                
-                if(fSeason !== 'All') match = match && String(r.season).includes(fSeason);
-                if(fVar !== 'All') match = match && String(r.variety).includes(fVar);
-                if(fProv !== 'All') match = match && String(r.prov).includes(fProv);
-                if(fDist !== 'All') match = match && String(r.dist).includes(fDist);
-                if(fSub !== 'All') match = match && String(r.sub).includes(fSub);
-                if(fAgro !== 'All') match = match && String(r.agronomist).includes(fAgro);
-                return match;
-            });
-            updateFilterSummary('dm', filtered);
-            renderDamageTable(filtered);
-        }
-
-        function renderDamageTable(data) {
-            const tbody = document.getElementById('damage-table-body');
-            tbody.innerHTML = '';
-            if(data.length === 0) { tbody.innerHTML = `<tr><td colspan="9" class="text-center p-8 text-slate-400">ไม่พบรายชื่อเกษตรกรตามเงื่อนไข</td></tr>`; return; }
-
-            data.forEach((row, i) => {
-                let farmer = row.farmer || '-'; 
-                let agro = row.agronomist || '-';
-                let prov = row.prov || ''; 
-                let dist = row.dist || ''; 
-                let sub = row.sub || '';
-                
-                let variety = row.variety || ''; 
-                let area = parseFloat(row.area) || 0;
-                let month = row.month || '';
-                
-                let dmArea = row.damagedarea || ''; if(dmArea === '-') dmArea = '';
-                let dmCause = row.damagecause || '';
-
-                const tr = document.createElement('tr'); tr.className = "hover:bg-slate-50 transition-colors";
-                tr.innerHTML = `
-                    <td class="p-3 text-center text-xs text-slate-500">${i+1}</td>
-                    <td class="p-3 text-xs font-medium text-brand truncate max-w-[120px]" title="${agro}">${agro}</td>
-                    <td class="p-3 font-medium text-slate-800">${farmer}</td>
-                    <td class="p-3 text-xs text-slate-600">ต.${sub} อ.${dist} จ.${prov}</td>
-                    <td class="p-3 text-center text-sm font-medium text-slate-500">${variety}</td>
-                    <td class="p-3 text-right font-medium text-brand">${Number(area).toLocaleString()}</td>
-                    <td class="p-3 bg-damage/5"><input type="number" id="dm-area-${i}" value="${dmArea}" step="0.1" min="0" max="${Number(area)||999}" class="w-24 px-2 py-1.5 border border-damage/30 rounded text-right text-damage font-bold focus:outline-none focus:ring-2 focus:ring-damage/50" placeholder="0.0"></td>
-                    <td class="p-3 bg-damage/5">
-                        <select id="dm-cause-${i}" class="w-full px-2 py-1.5 border border-damage/30 rounded text-sm focus:outline-none focus:ring-2 focus:ring-damage/50">
-                            <option value="">- สาเหตุ -</option>
-                            <option value="ภัยแล้ง" ${dmCause.includes('แล้ง')?'selected':''}>ภัยแล้ง</option>
-                            <option value="น้ำท่วม" ${dmCause.includes('ท่วม')?'selected':''}>น้ำท่วม</option>
-                            <option value="โรค/แมลง" ${dmCause.includes('โรค')?'selected':''}>โรค/แมลง</option>
-                            <option value="อื่นๆ" ${dmCause==='อื่นๆ'?'selected':''}>อื่นๆ</option>
-                        </select>
-                    </td>
-                    <td class="p-3 text-center"><button onclick="submitDamage(${i}, '${farmer}', '${area}', '${agro}')" id="btn-dm-${i}" class="px-3 py-1.5 bg-damage hover:bg-red-600 text-white rounded text-xs font-medium transition-colors shadow-sm w-full">อัปเดต</button></td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        // --- HARVEST LOGIC ---
-        function processHarvestData(data) {
-            myPlotsData = data.filter(row => isMyPlot(row));
-            initTabFilters('hv');
-            
-            let ageOptions = '<option value="All">- อายุแปลงปัจจุบัน -</option>';
-            for(let m=1; m<=15; m++) { ageOptions += `<option value="${m}">${m} เดือน${m===15?'+':''}</option>`; }
-            document.getElementById('hv-filter-age').innerHTML = ageOptions;
-
-            resetHvFilters();
-        }
-
-        function resetHvFilters() {
-            document.getElementById('search-harvest').value = '';
-            document.getElementById('hv-filter-age').value = 'All';
-            ['season', 'var', 'prov'].forEach(id => document.getElementById(`hv-filter-${id}`).value = 'All');
-            ['dist', 'sub'].forEach(id => document.getElementById(`hv-filter-${id}`).innerHTML = `<option value="All">- ${id==='dist'?'อำเภอ':'ตำบล'}ทั้งหมด -</option>`);
-            if(isAdmin()) document.getElementById('hv-filter-agro').value = 'All';
-            filterHarvestTable();
-        }
-
-        function filterHarvestTable() {
-            const term = document.getElementById('search-harvest').value.toLowerCase();
-            const fSeason = document.getElementById('hv-filter-season').value;
-            const fProv = document.getElementById('hv-filter-prov').value;
-            const fDist = document.getElementById('hv-filter-dist').value;
-            const fSub = document.getElementById('hv-filter-sub').value;
-            const fVar = document.getElementById('hv-filter-var').value;
-            const fAgro = isAdmin() ? document.getElementById('hv-filter-agro').value : 'All';
-            const fAge = document.getElementById('hv-filter-age').value;
-
-            const filtered = myPlotsData.filter(r => {
-                let fName = r.farmer || '';
-                let tel = r.tel || '';
-                let season = r.season || '';
-                let match = String(fName).toLowerCase().includes(term) || String(tel).toLowerCase().includes(term);
-                
-                if(fSeason !== 'All') match = match && String(season).includes(fSeason);
-                if(fVar !== 'All') match = match && String(r.variety).includes(fVar);
-                if(fProv !== 'All') match = match && String(r.prov).includes(fProv);
-                if(fDist !== 'All') match = match && String(r.dist).includes(fDist);
-                if(fSub !== 'All') match = match && String(r.sub).includes(fSub);
-                if(fAgro !== 'All') match = match && String(r.agronomist).includes(fAgro);
-                
-                if(fAge !== 'All') {
-                    let monthStr = r.month || '';
-                    let age = getCropAgeCurrent(monthStr, season);
-                    if(fAge === '15') match = match && (age >= 15);
-                    else match = match && (age === parseInt(fAge));
-                }
-
-                return match;
-            });
-            updateFilterSummary('hv', filtered);
-            renderHarvestTable(filtered);
-        }
-
-        function calcYield(index, activeArea) {
-            let hvArea = parseFloat(document.getElementById(`hv-area-${index}`).value) || 0;
-            let tons = parseFloat(document.getElementById(`hv-tons-${index}`).value) || 0;
-            
-            if (hvArea > activeArea) document.getElementById(`hv-area-${index}`).classList.add('border-red-500', 'bg-red-50');
-            else document.getElementById(`hv-area-${index}`).classList.remove('border-red-500', 'bg-red-50');
-
-            let remain = activeArea - hvArea;
-            let remainEl = document.getElementById(`hv-remain-${index}`);
-            if (remain > 0 && hvArea > 0) remainEl.innerHTML = `<span class="text-harvest-dark font-bold bg-harvest/20 px-1 rounded block mt-1">เหลือเกี่ยว ${remain.toFixed(1)} ไร่</span>`;
-            else remainEl.innerHTML = '';
-
-            let yieldPerRai = (hvArea > 0 && tons > 0) ? (tons / hvArea).toFixed(2) : '0.00';
-            document.getElementById(`hv-yield-${index}`).innerText = yieldPerRai;
-        }
-
-        function checkHarvestMonth(index, plantMonthStr) {
-            const hvSelect = document.getElementById(`hv-month-${index}`);
-            const warnText = document.getElementById(`hv-warn-${index}`);
-            const hvMonthStr = hvSelect.value;
-            
-            if(!hvMonthStr || !plantMonthStr || plantMonthStr === '-') {
-                warnText.classList.add('hidden'); hvSelect.classList.remove('border-red-400', 'bg-red-50'); return;
-            }
-
-            let pmIdx = monthArray.findIndex(m => m.toLowerCase() === plantMonthStr.toLowerCase().substring(0,3));
-            let hmIdx = monthArray.findIndex(m => m.toLowerCase() === hvMonthStr.toLowerCase().substring(0,3));
-            if(pmIdx === -1 || hmIdx === -1) return;
-
-            let diff = hmIdx - pmIdx;
-            if (diff <= 0) diff += 12;
-
-            warnText.classList.remove('hidden', 'text-red-500', 'text-emerald-500', 'bg-red-50', 'bg-emerald-50', 'border-red-200', 'border-emerald-200');
-            hvSelect.classList.remove('border-red-400', 'bg-red-50', 'border-emerald-400', 'bg-emerald-50');
-
-            if (diff >= 12) {
-                warnText.innerHTML = `🚨 อายุ ${diff} ด. (เกินกำหนด เร่งเก็บเกี่ยว!)`;
-                warnText.classList.add('text-red-600', 'bg-red-50', 'border-red-200');
-                hvSelect.classList.add('border-red-400', 'bg-red-50');
-            } else if (diff < 10) {
-                warnText.innerHTML = `⚠️ อายุ ${diff} ด. (เร็วไป เปอร์เซ็นต์แป้งต่ำ)`;
-                warnText.classList.add('text-red-500', 'bg-red-50', 'border-red-200');
-                hvSelect.classList.add('border-red-400', 'bg-red-50');
-            } else {
-                warnText.innerHTML = `✅ อายุ ${diff} ด. (เหมาะสม)`;
-                warnText.classList.add('text-emerald-600', 'bg-emerald-50', 'border-emerald-200');
-                hvSelect.classList.add('border-emerald-400', 'bg-emerald-50');
-            }
-        }
-
-        function renderHarvestTable(data) {
-            const tbody = document.getElementById('harvest-table-body');
-            tbody.innerHTML = '';
-            if(data.length === 0) { tbody.innerHTML = `<tr><td colspan="12" class="text-center p-8 text-slate-400">ไม่พบรายชื่อเกษตรกร</td></tr>`; return; }
-
-            data.forEach((row, i) => {
-                let farmer = row.farmer || '-'; 
-                let agro = row.agronomist || '-';
-                let prov = row.prov || ''; 
-                let dist = row.dist || ''; 
-                let sub = row.sub || '';
-                
-                let originalArea = parseFloat(row.area) || 0;
-                let dmArea = parseFloat(row.damagedarea) || 0;
-                let activeArea = Math.max(0, originalArea - dmArea); 
-                
-                let month = row.month || '';
-                let season = row.season || '';
-                
-                let currentAge = getCropAgeCurrent(month, season);
-                let ageBadge = '';
-                if(currentAge >= 12) ageBadge = `<div class="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] animate-pulse" title="แปลงนี้อายุ ${currentAge} เดือน เร่งเก็บเกี่ยว!"><i class="fa-solid fa-exclamation"></i></div>`;
-
-                let hvMonth = row.harvestmonth || ''; 
-                let hvTons = row.tons || '';
-                let hvStarch = row.starch || ''; // 🌟 เปอร์เซ็นต์แป้ง
-                let hvArea = row.harvestedarea || '';
-
-                let monthOptions = monthArray.map(m => `<option value="${m}" ${hvMonth.includes(m)?'selected':''}>${m}</option>`).join('');
-
-                const tr = document.createElement('tr'); tr.className = "hover:bg-slate-50 transition-colors";
-                tr.innerHTML = `
-                    <td class="p-3 text-center text-xs text-slate-500 relative">${i+1} ${ageBadge}</td>
-                    <td class="p-3 text-xs font-medium text-brand truncate max-w-[120px]" title="${agro}">${agro}</td>
-                    <td class="p-3 font-medium text-slate-800">${farmer}</td>
-                    <td class="p-3 text-xs text-slate-600">ต.${sub} อ.${dist} จ.${prov}</td>
-                    <td class="p-3 text-center font-bold text-slate-700 bg-slate-100/50">
-                        ${month} <span class="block text-[9px] text-slate-400 font-normal">อายุ ${currentAge} ด.</span>
-                    </td>
-                    <td class="p-3 text-right font-medium text-brand">
-                        ${activeArea.toLocaleString()}
-                        ${dmArea > 0 ? `<br><span class="text-[10px] text-red-500 block leading-tight">(-${dmArea} เสียหาย)</span>` : ''}
-                    </td>
-                    
-                    <td class="p-2 bg-harvest/5 border-l border-harvest/20">
-                        <input type="number" id="hv-area-${i}" value="${hvArea||activeArea}" step="0.1" min="0" oninput="calcYield(${i}, ${activeArea})" class="w-full px-2 py-1.5 border border-harvest/30 rounded text-right text-harvest-dark font-bold focus:outline-none focus:ring-2 focus:ring-harvest/50">
-                        <div id="hv-remain-${i}" class="text-right text-[10px]"></div>
-                    </td>
-                    <td class="p-2 bg-harvest/5">
-                        <input type="number" id="hv-tons-${i}" value="${hvTons}" step="0.1" min="0" oninput="calcYield(${i}, ${activeArea})" class="w-full px-2 py-1.5 border border-harvest/30 rounded text-right text-harvest-dark font-bold focus:outline-none focus:ring-2 focus:ring-harvest/50" placeholder="0.0">
-                    </td>
-                    <td class="p-2 bg-harvest/5">
-                        <input type="number" id="hv-starch-${i}" value="${hvStarch}" step="0.1" min="0" max="100" class="w-full px-2 py-1.5 border border-harvest/30 rounded text-right text-harvest-dark font-bold focus:outline-none focus:ring-2 focus:ring-harvest/50" placeholder="%">
-                    </td>
-                    <td class="p-2 text-center bg-harvest/10 text-harvest-dark font-black text-lg" id="hv-yield-${i}">0.00</td>
-                    
-                    <td class="p-2 bg-harvest/5 relative pb-6">
-                        <select id="hv-month-${i}" onchange="checkHarvestMonth(${i}, '${month}')" class="w-full px-2 py-1.5 border border-harvest/30 rounded text-sm font-bold text-harvest-dark focus:outline-none focus:ring-2 focus:ring-harvest/50 transition-colors">
-                            <option value="">- ระบุ -</option>
-                            ${monthOptions}
-                        </select>
-                        <div id="hv-warn-${i}" class="absolute bottom-1 left-2 right-2 text-[9px] font-bold hidden text-center px-1 rounded border whitespace-nowrap"></div>
-                    </td>
-                    <td class="p-2 text-center bg-harvest/5"><button onclick="submitHarvest(${i}, '${farmer}', '${agro}', ${activeArea})" id="btn-hv-${i}" class="px-3 py-1.5 bg-harvest hover:bg-amber-600 text-white rounded text-xs font-medium transition-colors shadow-sm w-full">บันทึก</button></td>
-                `;
-                tbody.appendChild(tr);
-                
-                calcYield(i, activeArea);
-                if(hvMonth) checkHarvestMonth(i, month);
-            });
-        }
-
-        function submitHarvest(index, farmerName, rowAgronomist, activeArea) {
-            const hvMonth = document.getElementById(`hv-month-${index}`).value;
-            const hvArea = parseFloat(document.getElementById(`hv-area-${index}`).value);
-            const hvTons = parseFloat(document.getElementById(`hv-tons-${index}`).value);
-            const hvStarch = document.getElementById(`hv-starch-${index}`).value; // 🌟 รับค่า % แป้ง
-            const hvYield = document.getElementById(`hv-yield-${index}`).innerText;
-
-            if(!hvArea || hvArea <= 0) { showToast('กรุณาระบุพื้นที่เก็บเกี่ยว', 'error'); return; }
-            if(!hvTons || hvTons <= 0) { showToast('กรุณาระบุผลผลิต (ตัน)', 'error'); return; }
-            if(!hvMonth) { showToast('กรุณาระบุเดือนที่เก็บเกี่ยว', 'error'); return; }
-
-            const warnEl = document.getElementById(`hv-warn-${index}`);
-            const isEarlyHarvest = !warnEl.classList.contains('hidden') && warnEl.classList.contains('text-red-500');
-
-            const payload = { 
-                action: "UPDATE_HARVEST", agronomist: rowAgronomist, farmer: farmerName, 
-                harvestMonth: hvMonth, harvestArea: hvArea, tons: hvTons, yieldPerRai: hvYield, remainingArea: activeArea - hvArea,
-                starch: hvStarch // 🌟 ส่ง % แป้งไป Backend
-            };
-
-            const btn = document.getElementById(`btn-hv-${index}`); const oldHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-spin fa-solid fa-spinner"></i>'; btn.disabled = true;
-
-            fetch(GAS_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow', body: JSON.stringify(payload) })
-            .then(r => r.json()).then(res => {
-                if(res.status === 'success') {
-                    let msg = `ได้ ${hvTons} ตัน (${hvYield} ตัน/ไร่)`;
-                    if(hvStarch) msg += ` เปอร์เซ็นต์แป้ง: ${hvStarch}%`;
-                    if(isEarlyHarvest) msg += `\n⚠️ บันทึกแบบมีความเสี่ยงแป้งต่ำ`;
-                    if((activeArea - hvArea) > 0) msg += `\nเหลือพื้นที่รอเกี่ยวรอบหน้า ${(activeArea - hvArea).toFixed(1)} ไร่`;
-                    
-                    showSuccessModal(`บันทึกเก็บเกี่ยว "${farmerName}" สำเร็จ!`, msg);
-                    logAction('UPDATE', `แจ้งเก็บเกี่ยว ${hvTons} ตัน (${hvYield} ตัน/ไร่) (เกษตรกร: ${farmerName})`);
-                    
-                    btn.innerHTML = '<i class="fa-solid fa-check"></i>'; btn.classList.replace('bg-harvest', 'bg-emerald-500');
-                    setTimeout(() => { 
-                        btn.innerHTML = 'บันทึก'; btn.classList.replace('bg-emerald-500', 'bg-harvest'); btn.disabled = false; 
-                        refreshAllData(true); 
-                    }, 1500);
-                } else { showToast(res.message, 'error'); btn.innerHTML = oldHtml; btn.disabled = false; }
-            }).catch(e => { showToast('เครือข่ายขัดข้อง อาจส่งสำเร็จแล้ว ให้รีเฟรชหน้าดูครับ', 'warning'); btn.innerHTML = oldHtml; btn.disabled = false; });
-        }
-
-        // ==========================================
-        // 4. API & Submit
-        // ==========================================
-        function collectData() {
-            const errors = document.querySelectorAll('.input-error');
-            if(errors.length > 0) { showToast(`แก้ไขช่องสีแดงจำนวน ${errors.length} จุด ก่อนบันทึก`, 'error'); return null; }
-
-            const ss = document.getElementById('global-season').value;
-            const rows = document.getElementById('table-body').children;
-            let dataArr = [];
-            for (let tr of rows) {
-                const id = tr.id.split('-')[1];
-                const f = document.getElementById(`farmer-${id}`).value, a = document.getElementById(`area-${id}`).value;
-                if (!f && !a) continue; if(!f||!a) { alert("ข้อมูลไม่ครบ"); return null; }
-                
-                const rowAgro = document.getElementById(`agro-${id}`).value || document.getElementById('global-agronomist').value;
-                
-                dataArr.push({ 
-                    agronomist: rowAgro, farmer:f, 
-                    tel:document.getElementById(`tel-${id}`).value,
-                    vendor:document.getElementById(`vendor-${id}`).value, type:document.getElementById(`type-${id}`).value, 
-                    prov:document.getElementById(`prov-${id}`).value, dist:document.getElementById(`dist-${id}`).value, sub:document.getElementById(`sub-${id}`).value, 
-                    irrig:document.getElementById(`irrig-${id}`).value, var:document.getElementById(`var-${id}`).value, area:a, month:document.getElementById(`month-${id}`).value 
-                });
-            }
-            if(dataArr.length===0) return null;
-            const payload = { action: "INSERT_BATCH", user: currentUser, agronomist: document.getElementById('global-agronomist').value, season: ss, records: dataArr };
-            if(editingBatchId) payload.batchId = editingBatchId;
-            return payload;
-        }
-
-        function submitToDB() {
-            const payload = collectData(); if(!payload) return;
-            const btn = document.getElementById('btn-submit'); 
-            btn.innerHTML = '<i class="fa-spin fa-solid fa-spinner mr-2"></i> กำลังบันทึก...'; 
-            btn.disabled = true;
-
-            fetch(GAS_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow', body: JSON.stringify(payload) })
-            .then(r => r.json()).then(res => {
-                if(res.status==='success') {
-                    const now = new Date(); const batchIdToSave = res.batchId || ('BATCH-' + now.getTime().toString().slice(-6));
-                    
-                    logAction('SUBMIT', `${editingBatchId ? 'อัปเดต' : 'บันทึก'}ข้อมูลสำเร็จ (Batch: ${batchIdToSave}) จำนวน ${payload.records.length} แปลง`);
-                    
-                    if(editingBatchId) {
-                        showSuccessModal('อัปเดตข้อมูลสำเร็จ', `ระบบได้จัดเก็บชุดข้อมูลเดิมเรียบร้อยแล้ว`);
-                        cancelEdit(); 
-                    } else {
-                        // 🌟 แจ้งเตือนการลงทะเบียนใหม่
-                        showSuccessModal('ลงทะเบียนสำเร็จ', `ระบบได้บันทึกข้อมูลแปลงปลูกใหม่จำนวน ${payload.records.length} รายการเรียบร้อยแล้ว`);
-                        document.getElementById('table-body').innerHTML=''; 
-                        rowCounter = 0; // 🌟 เคลียร์หน้าจอทั้งหมด
-                        addRows(10);
-                    }
-                    
-                    refreshAllData(true); // 🌟 Auto refresh in background ให้ดึงข้อมูลมาแสดงในตารางให้ทันที
-                } else { 
-                    showToast(res.message, 'error'); 
-                }
-            }).catch(e => { 
-                showToast('เครือข่ายขัดข้อง', 'error'); 
-            }).finally(() => { 
-                btn.disabled = false; 
-                // 🌟 คืนค่าปุ่มให้ถูกต้อง
-                if(document.getElementById('edit-mode-banner') && !document.getElementById('edit-mode-banner').classList.contains('hidden')) {
-                    btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> อัปเดตและส่งซ้ำ';
-                } else {
-                    btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> บันทึกเข้าระบบ';
-                }
-            });
-        }
-
-        function submitDamage(index, farmerName, maxArea, rowAgronomist) {
-            const dmArea = document.getElementById(`dm-area-${index}`).value;
-            const dmCause = document.getElementById(`dm-cause-${index}`).value;
-
-            if(!dmArea || parseFloat(dmArea) <= 0) { showToast('กรุณาระบุพื้นที่เสียหาย', 'error'); return; }
-            if(parseFloat(dmArea) > parseFloat(maxArea)) { showToast('พื้นที่เสียหายต้องไม่เกินพื้นที่ปลูกเดิม', 'error'); return; }
-            if(!dmCause) { showToast('กรุณาระบุสาเหตุ', 'error'); return; }
-
-            const payload = { action: "UPDATE_DAMAGE", agronomist: rowAgronomist, farmer: farmerName, damagedArea: dmArea, cause: dmCause };
-            const btn = document.getElementById(`btn-dm-${index}`); const oldHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-spin fa-solid fa-spinner"></i>'; btn.disabled = true;
-
-            fetch(GAS_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow', body: JSON.stringify(payload) })
-            .then(r => r.json()).then(res => {
-                if(res.status === 'success') {
-                    logAction('UPDATE', `แจ้งพื้นที่เสียหาย ${dmArea} ไร่ สาเหตุ: ${dmCause} (เกษตรกร: ${farmerName})`);
-                    showSuccessModal('อัปเดตสำเร็จ', `แจ้งพื้นที่เสียหายของ "${farmerName}" เรียบร้อยแล้ว`);
-                    
-                    btn.innerHTML = '<i class="fa-solid fa-check"></i>'; btn.classList.replace('bg-damage', 'bg-emerald-500');
-                    setTimeout(() => { 
-                        btn.innerHTML = 'อัปเดต'; btn.classList.replace('bg-emerald-500', 'bg-damage'); btn.disabled = false; 
-                        refreshAllData(true); 
-                    }, 1500);
-                } else { showToast(res.message, 'error'); btn.innerHTML = oldHtml; btn.disabled = false; }
-            }).catch(e => { showToast('เครือข่ายขัดข้อง', 'warning'); btn.innerHTML = oldHtml; btn.disabled = false; });
-        }
-
-        // ==========================================
-        // 5. Utility & History Functions
-        // ==========================================
-        function cancelEdit() { 
-            editingBatchId = null; 
-            document.getElementById('edit-mode-banner').classList.add('hidden'); 
-            
-            const btnSubmit = document.getElementById('btn-submit');
-            btnSubmit.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> บันทึกเข้าระบบ';
-            btnSubmit.className = "px-6 py-2.5 bg-brand text-white rounded-xl hover:bg-brand-dark font-medium text-sm transition-colors shadow-sm flex items-center";
-            btnSubmit.disabled = false;
-            
-            document.getElementById('table-body').innerHTML=''; 
-            rowCounter = 0; 
-            addRows(10); 
-        }
-        
-        function loadForEdit(batchId) {
-            const batch = window.onlineHistoryDB.find(b => b.id === batchId);
-            if (!batch) { showToast('ไม่พบข้อมูล Batch นี้', 'error'); return; }
-
-            editingBatchId = batchId;
-            document.getElementById('edit-mode-banner').classList.remove('hidden');
-            document.getElementById('edit-batch-id').innerText = batchId;
-            
-            const btnSubmit = document.getElementById('btn-submit');
-            btnSubmit.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> อัปเดตและส่งซ้ำ';
-            btnSubmit.className = "px-6 py-2.5 bg-amber-500 text-white rounded-xl hover:bg-amber-600 font-medium text-sm transition-colors shadow-sm flex items-center";
-
-            document.getElementById('global-agronomist').value = batch.agronomist;
-            document.getElementById('global-season').value = batch.season;
-
-            document.getElementById('table-body').innerHTML = '';
-            rowCounter = 0;
-            batch.records.forEach(rec => {
-                rowCounter++;
-                const r = rowCounter;
-                const tr = document.createElement('tr');
-                tr.id = `row-${r}`;
-                tr.className = "hover:bg-slate-50/50 transition-colors group";
-                tr.innerHTML = createRowHTML(r, rec);
-                document.getElementById('table-body').appendChild(tr);
-                updateDistricts(r, rec.dist);
-                updateSubDistricts(r, rec.sub);
-            });
-            updateRowCount();
-            switchView('entry'); 
-            showToast('ดึงข้อมูลมาเพื่อแก้ไขแล้ว (หากมีการส่ง จะลบของเดิมและลงเป็นชุดข้อมูลใหม่ใน Batch ID เดิม)', 'info');
-        }
-
-        function logAction(action, details) {
-            let logs = JSON.parse(localStorage.getItem('agri_logs') || '[]');
-            logs.unshift({ timestamp: new Date().toISOString(), user: currentFullName || 'SYSTEM', action: action, details: details });
-            if(logs.length > 100) logs.pop(); localStorage.setItem('agri_logs', JSON.stringify(logs));
-            renderAuditLogs();
-        }
-
-        function renderAuditLogs() {
-            const allLogs = JSON.parse(localStorage.getItem('agri_logs') || '[]');
-            const container = document.getElementById('audit-logs-container');
-            if(!container) return; container.innerHTML = '';
-            
-            const logs = isAdmin() ? allLogs : allLogs.filter(log => log.user === currentFullName || log.user === currentUser);
-
-            if (logs.length === 0) { container.innerHTML = '<p class="text-slate-400 italic">ไม่มีบันทึกกิจกรรม</p>'; return; }
-            
-            const icons = {
-                'LOGIN': '<div class="absolute -left-[17px] top-1 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center border-2 border-white shadow-sm"><i class="fa-solid fa-arrow-right-to-bracket text-xs"></i></div>',
-                'LOGOUT': '<div class="absolute -left-[17px] top-1 w-8 h-8 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center border-2 border-white shadow-sm"><i class="fa-solid fa-power-off text-xs"></i></div>',
-                'SUBMIT': '<div class="absolute -left-[17px] top-1 w-8 h-8 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center border-2 border-white shadow-sm"><i class="fa-solid fa-cloud-arrow-up text-xs"></i></div>',
-                'UPDATE': '<div class="absolute -left-[17px] top-1 w-8 h-8 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center border-2 border-white shadow-sm"><i class="fa-solid fa-pen text-xs"></i></div>'
-            };
-            
-            logs.forEach(log => {
-                const dObj = new Date(log.timestamp);
-                container.innerHTML += `
-                    <div class="relative pl-6 pb-2">
-                        ${icons[log.action] || icons['SUBMIT']}
-                        <div class="bg-white p-3 border border-slate-100 rounded-xl shadow-sm">
-                            <div class="flex justify-between items-start mb-1">
-                                <span class="font-bold text-slate-800 text-sm">${log.action === 'UPDATE' ? 'อัปเดตข้อมูล' : log.action}</span>
-                                <span class="text-[11px] text-slate-400">${dObj.toLocaleDateString('th-TH')} ${dObj.toLocaleTimeString('th-TH')} น.</span>
-                            </div>
-                            <p class="text-sm text-slate-600">${log.details}</p>
-                            <p class="text-xs text-slate-400 mt-2 font-medium"><i class="fa-regular fa-user mr-1"></i> ทำรายการโดย: ${log.user}</p>
-                        </div>
-                    </div>`;
-            });
-        }
-
-        function renderHistoryTable() {
-            const allDb = window.onlineHistoryDB || [];
-            const tbody = document.getElementById('history-table-body'); tbody.innerHTML = '';
-            
-            const db = isAdmin() ? allDb : allDb.filter(batch => batch.user === currentUser || batch.agronomist === currentFullName);
-
-            if (db.length === 0) { tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400 italic">ไม่มีประวัติการส่งข้อมูล (หรือยังโหลดข้อมูลไม่เสร็จ)</td></tr>`; return; }
-            db.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).forEach(batch => {
-                const dObj = new Date(batch.timestamp);
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="p-3 font-mono text-xs text-slate-500">${batch.id}</td>
-                        <td class="p-3 text-slate-800">${dObj.toLocaleDateString('th-TH')} ${dObj.toLocaleTimeString('th-TH').slice(0,5)} น.</td>
-                        <td class="p-3"><span class="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-medium">${batch.user}</span></td>
-                        <td class="p-3 text-slate-800">${batch.agronomist}</td>
-                        <td class="p-3 text-center font-bold text-brand">${batch.records ? batch.records.length : '?'}</td>
-                        <td class="p-3 text-center"><button onclick="loadForEdit('${batch.id}')" class="text-xs bg-amber-50 text-amber-600 hover:bg-amber-100 border border-amber-200 px-3 py-1.5 rounded-lg font-medium transition-colors"><i class="fa-solid fa-pen-to-square mr-1"></i> ดึงมาแก้ไข</button></td>
-                    </tr>`;
-            });
-        }
-
-        function exportCSV() {
-            const payload = collectData(); if (!payload) return; 
-            const headers = ["Agronomist name", "Farmer name", "Phone Number", "Vendor Code", "Farmer Type", "Crop Season", "Province", "District", "local", "Irrigation system", "Variety", " Planting Area(Rai)", " Planting Month"];
-            let csvContent = headers.join(',') + '\n';
-            payload.records.forEach(row => {
-                const values = [payload.agronomist, row.farmer, row.tel, row.vendor, row.type, payload.season, row.prov, row.dist, row.sub, row.irrig, row.var, row.area, row.month].map(val => {
-                    let strVal = String(val || ''); if (strVal.includes(',') || strVal.includes('"')) strVal = `"${strVal.replace(/"/g, '""')}"`; return strVal;
-                });
-                csvContent += values.join(',') + '\n';
-            });
-            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob); const link = document.createElement("a");
-            link.setAttribute("href", url); link.setAttribute("download", `PlotRegistration_${new Date().toISOString().slice(0,10).replace(/-/g, '')}.csv`);
-            document.body.appendChild(link); link.click(); document.body.removeChild(link);
-        }
-
-        window.onload = initApp;
-    </script>
+        <button id="resetFilters" class="text-sm bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-xl">Reset filters</button>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+        <div><label class="text-xs text-slate-500 font-medium">Plant</label><select id="fPlant" class="filter-select"></select></div>
+        <div><label class="text-xs text-slate-500 font-medium">Year</label><select id="fYear" class="filter-select"></select></div>
+        <div><label class="text-xs text-slate-500 font-medium">Month</label><select id="fMonth" class="filter-select"></select></div>
+        <div><label class="text-xs text-slate-500 font-medium">Province</label><select id="fProvince" class="filter-select"></select></div>
+        <div><label class="text-xs text-slate-500 font-medium">District</label><select id="fDistrict" class="filter-select"></select></div>
+        <div><label class="text-xs text-slate-500 font-medium">Vendor Type</label><select id="fVendorType" class="filter-select"></select></div>
+        <div><label class="text-xs text-slate-500 font-medium">Roots Type</label><select id="fRootsType" class="filter-select"></select></div>
+        <div><label class="text-xs text-slate-500 font-medium">Search</label><input id="fSearch" class="input-box" placeholder="ชื่อ/จังหวัด/อำเภอ" /></div>
+      </div>
+    </section>
+
+    <section class="card p-4 bg-ingredionLight border-green-200">
+      <div class="flex items-start gap-3">
+        <div class="text-2xl">💡</div>
+        <div>
+          <h3 class="font-semibold text-ingredionDark">Executive summary</h3>
+          <p id="summaryText" class="text-sm text-slate-700 leading-relaxed mt-1">รอการโหลดข้อมูล...</p>
+          <div id="sourcePills" class="flex flex-wrap gap-2 mt-3"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-2 lg:grid-cols-6 gap-4">
+      <div class="card kpi-card border-b-ingredion p-4"><p class="text-xs text-slate-500">Total Volume</p><p id="kpiVolume" class="text-2xl md:text-3xl font-bold text-ink">-</p><p class="text-xs text-slate-400">MT</p></div>
+      <div class="card kpi-card border-b-emerald-400 p-4"><p class="text-xs text-slate-500">Weighted Starch</p><p id="kpiStarch" class="text-2xl md:text-3xl font-bold text-ink">-</p><p class="text-xs text-slate-400">%</p></div>
+      <div class="card kpi-card border-b-blue-400 p-4"><p class="text-xs text-slate-500">Average Price</p><p id="kpiPrice" class="text-2xl md:text-3xl font-bold text-ink">-</p><p class="text-xs text-slate-400">THB/kg</p></div>
+      <div class="card kpi-card border-b-purple-400 p-4"><p class="text-xs text-slate-500">Weighted PPDS</p><p id="kpiPpds" class="text-2xl md:text-3xl font-bold text-ink">-</p><p class="text-xs text-slate-400">THB/kg starch</p></div>
+      <div class="card kpi-card border-b-orange-400 p-4"><p class="text-xs text-slate-500">Vendors</p><p id="kpiVendors" class="text-2xl md:text-3xl font-bold text-ink">-</p><p class="text-xs text-slate-400">unique names</p></div>
+      <div class="card kpi-card border-b-slate-400 p-4"><p class="text-xs text-slate-500">Records</p><p id="kpiRecords" class="text-2xl md:text-3xl font-bold text-ink">-</p><p class="text-xs text-slate-400">filtered rows</p></div>
+    </section>
+
+    <section class="flex flex-wrap gap-2 no-print">
+      <button class="tab-btn active px-4 py-2 rounded-full text-sm font-medium" data-tab="overview">Overview</button>
+      <button class="tab-btn px-4 py-2 rounded-full text-sm font-medium" data-tab="sourcing">Sourcing Details</button>
+      <button class="tab-btn px-4 py-2 rounded-full text-sm font-medium" data-tab="market">Market Situation</button>
+      <button class="tab-btn px-4 py-2 rounded-full text-sm font-medium" data-tab="sheets">Sheet Explorer</button>
+      <button class="tab-btn px-4 py-2 rounded-full text-sm font-medium" data-tab="quality">Data Quality</button>
+      <button class="tab-btn px-4 py-2 rounded-full text-sm font-medium" data-tab="github">GitHub Setup</button>
+    </section>
+
+    <section id="tab-overview" class="tab-section space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="card p-4"><h3 class="font-semibold mb-3">📈 Monthly volume by plant</h3><div class="chart-box"><canvas id="chartMonthlyVolume"></canvas></div></div>
+        <div class="card p-4"><h3 class="font-semibold mb-3">🎯 KPI trend: PPDS / price / starch</h3><div class="chart-box"><canvas id="chartKpiTrend"></canvas></div></div>
+        <div class="card p-4"><h3 class="font-semibold mb-3">🧑‍🌾 Vendor type contribution</h3><div class="small-chart"><canvas id="chartVendorType"></canvas></div></div>
+        <div class="card p-4"><h3 class="font-semibold mb-3">📍 Top provinces by volume</h3><div class="small-chart"><canvas id="chartTopProvince"></canvas></div></div>
+      </div>
+      <div class="card p-4">
+        <h3 class="font-semibold mb-3">🏆 Top 15 vendors by volume</h3>
+        <div class="chart-box"><canvas id="chartTopVendor"></canvas></div>
+      </div>
+    </section>
+
+    <section id="tab-sourcing" class="tab-section hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="card p-4 lg:col-span-2"><h3 class="font-semibold mb-3">📊 Volume: farmer / broker / regular roots</h3><div class="chart-box"><canvas id="chartVolumeSource"></canvas></div></div>
+        <div class="card p-4">
+          <h3 class="font-semibold mb-3">📌 Area insights</h3>
+          <div id="areaInsights" class="space-y-3 text-sm"></div>
+        </div>
+      </div>
+      <div class="card p-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
+          <div>
+            <h3 class="font-semibold">📋 Root sourcing transaction table</h3>
+            <p id="detailTableInfo" class="text-xs text-slate-500 mt-1"></p>
+          </div>
+          <div class="flex gap-2"><button id="prevPage" class="px-3 py-2 rounded-xl bg-slate-100 text-sm">Prev</button><button id="nextPage" class="px-3 py-2 rounded-xl bg-slate-100 text-sm">Next</button></div>
+        </div>
+        <div class="table-wrap">
+          <table class="w-full text-sm whitespace-nowrap">
+            <thead><tr class="text-left text-slate-600"><th class="p-3">Plant</th><th class="p-3">Year</th><th class="p-3">Month</th><th class="p-3">Vendor</th><th class="p-3">Type</th><th class="p-3">Province</th><th class="p-3">District</th><th class="p-3 text-right">MT</th><th class="p-3 text-right">Starch %</th><th class="p-3 text-right">Price</th><th class="p-3 text-right">PPDS</th><th class="p-3 text-right">Amount</th></tr></thead>
+            <tbody id="detailBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-market" class="tab-section hidden space-y-6">
+      <div class="card p-4">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-3 mb-4">
+          <div><h3 class="font-semibold">🌏 Market price trend</h3><p class="text-xs text-slate-500">ข้อมูลจาก Market situation.xlsx</p></div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full md:w-auto">
+            <div><label class="text-xs text-slate-500">Series</label><select id="marketSeries" class="filter-select"><option value="starchDomestic">Tapioca starch domestic THB/kg</option><option value="starchFobBangkok">Tapioca starch FOB Bangkok USD/MT</option><option value="chipThb">Tapioca chip THB/kg</option><option value="chipSrichang">Tapioca chip TH @ Srichang USD/MT</option><option value="ethanol">Ethanol THB/Liter</option><option value="dryPulpDaily">Dry pulp daily average</option><option value="dryPulpMonthly">Dry pulp monthly price</option></select></div>
+            <div><label class="text-xs text-slate-500">Points</label><select id="marketLimit" class="filter-select"><option value="60">Last 60</option><option value="120" selected>Last 120</option><option value="9999">All</option></select></div>
+          </div>
+        </div>
+        <div class="chart-box"><canvas id="chartMarket"></canvas></div>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="card p-4"><h3 class="font-semibold mb-3">🌱 Thailand tapioca production</h3><div class="chart-box"><canvas id="chartProduction"></canvas></div></div>
+        <div class="card p-4"><h3 class="font-semibold mb-3">🧾 Market dataset summary</h3><div id="marketSummary" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm"></div></div>
+      </div>
+    </section>
+
+    <section id="tab-sheets" class="tab-section hidden space-y-4">
+      <div class="card p-4">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+          <div><label class="text-xs text-slate-500">Workbook</label><select id="sheetWorkbook" class="filter-select"></select></div>
+          <div><label class="text-xs text-slate-500">Sheet</label><select id="sheetName" class="filter-select"></select></div>
+          <div><label class="text-xs text-slate-500">Search in sheet</label><input id="sheetSearch" class="input-box" placeholder="ค้นหาในชีต" /></div>
+          <div><label class="text-xs text-slate-500">Column limit</label><select id="sheetColLimit" class="filter-select"><option value="20">20 columns</option><option value="40" selected>40 columns</option><option value="80">80 columns</option><option value="9999">All columns</option></select></div>
+          <button id="exportSheetBtn" class="bg-ingredion hover:bg-ingredionDark text-white px-4 py-2.5 rounded-xl text-sm font-semibold">Export selected sheet CSV</button>
+        </div>
+        <div id="sheetSummary" class="flex flex-wrap gap-2 my-3"></div>
+        <div class="table-wrap">
+          <table id="sheetTable" class="w-full text-xs whitespace-nowrap"></table>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-quality" class="tab-section hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="card p-4"><h3 class="font-semibold mb-3">✅ Required field completeness</h3><div id="qualityFields" class="space-y-2"></div></div>
+        <div class="card p-4"><h3 class="font-semibold mb-3">📚 Workbook / sheet coverage</h3><div id="qualitySheets" class="table-wrap max-h-[420px]"><table class="w-full text-sm"><thead><tr class="text-left"><th class="p-3">Workbook</th><th class="p-3">Sheet</th><th class="p-3 text-right">Rows</th><th class="p-3 text-right">Cols</th><th class="p-3 text-right">Non-empty</th></tr></thead><tbody id="qualitySheetBody"></tbody></table></div></div>
+      </div>
+      <div class="card p-4"><h3 class="font-semibold mb-3">⚠️ Data notes</h3><ul id="dataNotes" class="list-disc pl-5 text-sm text-slate-700 space-y-1"></ul></div>
+    </section>
+
+    <section id="tab-github" class="tab-section hidden">
+      <div class="card p-5 text-sm text-slate-700 leading-relaxed space-y-4">
+        <h3 class="font-semibold text-lg text-ink">🚀 วิธีนำขึ้น GitHub Pages</h3>
+        <ol class="list-decimal pl-5 space-y-2">
+          <li>สร้าง repository ใหม่ เช่น <b>root-sourcing-dashboard</b></li>
+          <li>อัปโหลดไฟล์ทั้งหมดในโฟลเดอร์นี้ ได้แก่ <b>index.html</b>, โฟลเดอร์ <b>data</b>, โฟลเดอร์ <b>tools</b> และ <b>README.md</b></li>
+          <li>ไปที่ <b>Settings → Pages</b> แล้วเลือก Branch: <b>main</b> และ Folder: <b>/root</b></li>
+          <li>รอ GitHub Pages build เสร็จ แล้วเปิดลิงก์ Dashboard ได้ทันที</li>
+        </ol>
+        <div class="bg-slate-50 rounded-xl border border-slate-200 p-4">
+          <p class="font-semibold text-ink mb-2">Update data รอบถัดไป</p>
+          <p>นำ Excel ชุดใหม่วางไว้ในโฟลเดอร์เดียวกับโปรเจกต์ แล้วรัน:</p>
+          <pre class="bg-slate-900 text-slate-100 rounded-xl p-3 mt-2 overflow-x-auto">python tools/convert_excel_to_json.py</pre>
+          <p class="mt-2">หรือถ้าไฟล์ Excel อยู่ในโฟลเดอร์อื่น ให้ระบุ path:</p>
+          <pre class="bg-slate-900 text-slate-100 rounded-xl p-3 mt-2 overflow-x-auto">python tools/convert_excel_to_json.py /path/to/excel-folder</pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+<script>
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+let DATA = null;
+let charts = {};
+let detailPage = 0;
+const pageSize = 200;
+const state = { plant:'', year:'', month:'', province:'', district:'', vendorType:'', rootsType:'', search:'' };
+const nf0 = new Intl.NumberFormat('en-US', { maximumFractionDigits:0 });
+const nf1 = new Intl.NumberFormat('en-US', { maximumFractionDigits:1 });
+const nf2 = new Intl.NumberFormat('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
+const $ = id => document.getElementById(id);
+
+function safeNumber(v){ return typeof v === 'number' && Number.isFinite(v) ? v : 0; }
+function fmt(n, digits=0){ if(!Number.isFinite(n)) return '-'; return digits===0 ? nf0.format(n) : (digits===1 ? nf1.format(n) : nf2.format(n)); }
+function pctFromFraction(v){ if(!Number.isFinite(v)) return '-'; return nf2.format(Math.abs(v) <= 1 ? v*100 : v); }
+function compact(n){ return new Intl.NumberFormat('en-US', {notation:'compact', maximumFractionDigits:1}).format(n || 0); }
+function uniq(arr){ return [...new Set(arr.filter(v => v !== null && v !== undefined && v !== ''))]; }
+function sortMixed(arr){ return arr.sort((a,b)=> String(a).localeCompare(String(b), 'th', {numeric:true})); }
+function monthLabel(y, m){ return `${MONTHS[(m||1)-1] || ''} ${String(y).slice(-2)}`; }
+function dateKey(r){ return `${r.year}-${String(r.monthNo).padStart(2,'0')}`; }
+function escapeHtml(v){ return String(v ?? '').replace(/[&<>"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[s])); }
+function debounce(fn, ms=180){ let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args),ms); }; }
+
+function setAlert(msg){ const el=$('alert'); if(!msg){ el.classList.add('hidden'); return; } el.textContent=msg; el.classList.remove('hidden'); }
+function setOptions(id, values, selected, allLabel='All'){
+  const sel = $(id); const old = selected ?? sel.value;
+  sel.innerHTML = `<option value="">${allLabel}</option>` + values.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+  if(values.map(String).includes(String(old))) sel.value = old; else sel.value = '';
+}
+function downloadCSV(rows, filename){
+  const csv = rows.map(row => row.map(v => '"' + String(v ?? '').replace(/"/g,'""') + '"').join(',')).join('\n');
+  const blob = new Blob(['\ufeff' + csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click(); URL.revokeObjectURL(a.href);
+}
+function recordsToCSVRows(records){
+  const headers = ['plant','year','month','vendor','vendorType','rootsType','province','district','volumeKg','volumeMt','starchContent','weighStarch','price','amount','ppds'];
+  return [headers, ...records.map(r => headers.map(h => r[h]))];
+}
+
+async function loadData(){
+  try {
+    const res = await fetch('data/dashboard_data.json', {cache:'no-store'});
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    DATA = await res.json();
+    initialize();
+  } catch(err) {
+    setAlert('ไม่สามารถโหลด data/dashboard_data.json ได้ หากเปิดไฟล์แบบ local ให้รันผ่าน web server หรืออัปขึ้น GitHub Pages ก่อนใช้งาน: ' + err.message);
+    $('loadStatus').textContent = 'โหลดข้อมูลไม่สำเร็จ';
+  }
+}
+
+function initialize(){
+  $('loadStatus').textContent = `Loaded ${fmt(DATA.metadata.counts.sourcingRecords)} sourcing records from ${DATA.metadata.counts.workbookSheets} sheets`;
+  renderSourcePills();
+  initFilters();
+  initTabs();
+  initSheetExplorer();
+  initEvents();
+  updateAll();
+}
+function renderSourcePills(){
+  $('sourcePills').innerHTML = DATA.metadata.sourceFiles.map(s => `<span class="pill green">${escapeHtml(s.file)}</span>`).join('') + `<span class="pill blue">${DATA.metadata.counts.workbookSheets} sheets</span>`;
+}
+function initFilters(){
+  const rec = DATA.sourcing.records;
+  setOptions('fPlant', sortMixed(uniq(rec.map(r=>r.plant))), state.plant);
+  setOptions('fYear', uniq(rec.map(r=>r.year)).sort((a,b)=>a-b), state.year);
+  setOptions('fMonth', MONTHS.filter(m => rec.some(r=>r.month===m)), state.month);
+  setOptions('fProvince', sortMixed(uniq(rec.map(r=>r.province))), state.province);
+  setOptions('fDistrict', sortMixed(uniq(rec.map(r=>r.district))), state.district);
+  setOptions('fVendorType', sortMixed(uniq(rec.map(r=>r.vendorType))), state.vendorType);
+  setOptions('fRootsType', sortMixed(uniq(rec.map(r=>r.rootsType))), state.rootsType);
+}
+function initEvents(){
+  ['fPlant','fYear','fMonth','fProvince','fDistrict','fVendorType','fRootsType'].forEach(id => $(id).addEventListener('change', () => { state[id.replace('f','').charAt(0).toLowerCase()+id.replace('f','').slice(1)] = $(id).value; detailPage=0; updateAll(); }));
+  $('fSearch').addEventListener('input', debounce(()=>{ state.search = $('fSearch').value.trim().toLowerCase(); detailPage=0; updateAll(); }));
+  $('resetFilters').addEventListener('click', () => { Object.keys(state).forEach(k => state[k]=''); $('fSearch').value=''; initFilters(); detailPage=0; updateAll(); });
+  $('exportFilteredBtn').addEventListener('click', () => downloadCSV(recordsToCSVRows(getFilteredRecords()), 'filtered_root_sourcing.csv'));
+  $('prevPage').addEventListener('click', () => { detailPage = Math.max(0, detailPage-1); renderDetailTable(getFilteredRecords()); });
+  $('nextPage').addEventListener('click', () => { detailPage += 1; renderDetailTable(getFilteredRecords()); });
+  $('marketSeries').addEventListener('change', renderMarketCharts);
+  $('marketLimit').addEventListener('change', renderMarketCharts);
+  $('jsonUpload').addEventListener('change', handleJsonUpload);
+}
+function handleJsonUpload(ev){
+  const file = ev.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => { try { DATA = JSON.parse(reader.result); detailPage=0; Object.keys(charts).forEach(k=>charts[k]?.destroy()); charts={}; initialize(); } catch(e){ setAlert('JSON file ไม่ถูกต้อง: '+e.message); } };
+  reader.readAsText(file);
+}
+function initTabs(){
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tab-section').forEach(s=>s.classList.add('hidden'));
+    $('tab-'+btn.dataset.tab).classList.remove('hidden');
+    setTimeout(()=>Object.values(charts).forEach(c=>c?.resize()), 50);
+  }));
+}
+
+function getFilteredRecords(){
+  const s = state.search;
+  return DATA.sourcing.records.filter(r =>
+    (!state.plant || String(r.plant)===String(state.plant)) &&
+    (!state.year || String(r.year)===String(state.year)) &&
+    (!state.month || String(r.month)===String(state.month)) &&
+    (!state.province || String(r.province)===String(state.province)) &&
+    (!state.district || String(r.district)===String(state.district)) &&
+    (!state.vendorType || String(r.vendorType)===String(state.vendorType)) &&
+    (!state.rootsType || String(r.rootsType)===String(state.rootsType)) &&
+    (!s || [r.vendor,r.province,r.district,r.vendorType,r.rootsType,r.plant].some(x=>String(x||'').toLowerCase().includes(s)))
+  );
+}
+function aggregate(records){
+  const volumeMt = records.reduce((a,r)=>a+safeNumber(r.volumeMt),0);
+  const volumeKg = records.reduce((a,r)=>a+safeNumber(r.volumeKg),0);
+  const amount = records.reduce((a,r)=>a+safeNumber(r.amount),0);
+  const weighStarch = records.reduce((a,r)=>a+safeNumber(r.weighStarch),0);
+  return { volumeMt, volumeKg, amount, weighStarch,
+    avgStarch: volumeKg ? weighStarch/volumeKg : NaN,
+    avgPrice: volumeKg ? amount/volumeKg : NaN,
+    avgPpds: weighStarch ? amount/weighStarch : NaN,
+    vendors: uniq(records.map(r=>r.vendor)).length,
+    records: records.length };
+}
+function groupSum(records, keyFn, valueFn){
+  const m = new Map();
+  for(const r of records){ const k=keyFn(r) || 'N/A'; m.set(k, (m.get(k)||0) + safeNumber(valueFn(r))); }
+  return [...m.entries()].map(([key,value])=>({key,value}));
+}
+function updateAll(){
+  const records = getFilteredRecords();
+  updateKpis(records); renderOverviewCharts(records); renderSourcing(records); renderDetailTable(records); renderMarketCharts(); renderQuality(records); updateSummary(records);
+}
+function updateKpis(records){
+  const a=aggregate(records);
+  $('kpiVolume').textContent = fmt(a.volumeMt,0);
+  $('kpiStarch').textContent = pctFromFraction(a.avgStarch);
+  $('kpiPrice').textContent = fmt(a.avgPrice,2);
+  $('kpiPpds').textContent = fmt(a.avgPpds,2);
+  $('kpiVendors').textContent = fmt(a.vendors,0);
+  $('kpiRecords').textContent = fmt(a.records,0);
+}
+function updateSummary(records){
+  const a=aggregate(records);
+  const topProv = groupSum(records, r=>r.province, r=>r.volumeMt).sort((a,b)=>b.value-a.value)[0];
+  const topVendor = groupSum(records, r=>r.vendor, r=>r.volumeMt).sort((a,b)=>b.value-a.value)[0];
+  $('summaryText').innerHTML = `ช่วงข้อมูลที่เลือกมีปริมาณรับซื้อรวม <b>${fmt(a.volumeMt)} MT</b> จาก <b>${fmt(a.records)}</b> records / <b>${fmt(a.vendors)}</b> vendors; แป้งเฉลี่ยถ่วงน้ำหนัก <b>${pctFromFraction(a.avgStarch)}%</b>, ราคาเฉลี่ย <b>${fmt(a.avgPrice,2)} THB/kg</b>, PPDS เฉลี่ย <b>${fmt(a.avgPpds,2)}</b>. จังหวัดหลักคือ <b>${escapeHtml(topProv?.key || '-')}</b> (${fmt(topProv?.value || 0)} MT) และ vendor สูงสุดคือ <b>${escapeHtml(topVendor?.key || '-')}</b> (${fmt(topVendor?.value || 0)} MT).`;
+}
+function makeChart(id, config){
+  if(charts[id]) charts[id].destroy();
+  charts[id] = new Chart($(id), config);
+}
+function chartDefaults(){ return { responsive:true, maintainAspectRatio:false, interaction:{mode:'index', intersect:false}, plugins:{legend:{position:'bottom'}, tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${fmt(ctx.parsed.y ?? ctx.parsed, 2)}`}}}, scales:{x:{grid:{display:false}}, y:{beginAtZero:true}} }; }
+function renderOverviewCharts(records){
+  const byDatePlant = new Map();
+  const plants = sortMixed(uniq(records.map(r=>r.plant)));
+  const keys = uniq(records.map(dateKey)).sort();
+  for(const r of records){ const k=dateKey(r)+'|'+r.plant; byDatePlant.set(k, (byDatePlant.get(k)||0)+safeNumber(r.volumeMt)); }
+  makeChart('chartMonthlyVolume', { type:'line', data:{ labels: keys.map(k=>monthLabel(k.slice(0,4), Number(k.slice(5,7)))), datasets: plants.map(p=>({label:p, data:keys.map(k=>byDatePlant.get(k+'|'+p)||0), tension:.25, fill:false})) }, options: chartDefaults() });
+
+  const kpiRows = DATA.sourcing.kpis.filter(r => (!state.plant || String(r.plant)===String(state.plant)) && (!state.year || String(r.year)===String(state.year)) && (!state.month || String(r.month)===String(state.month)));
+  const kKeys = uniq(kpiRows.map(r=>`${r.year}-${String(r.monthNo).padStart(2,'0')}`)).sort();
+  function avgFor(key, field){ const rows=kpiRows.filter(r=>`${r.year}-${String(r.monthNo).padStart(2,'0')}`===key && Number.isFinite(r[field])); return rows.length ? rows.reduce((a,r)=>a+r[field],0)/rows.length : null; }
+  makeChart('chartKpiTrend', { type:'line', data:{ labels:kKeys.map(k=>monthLabel(k.slice(0,4), Number(k.slice(5,7)))), datasets:[
+    {label:'Act. PPDS', data:kKeys.map(k=>avgFor(k,'actPpds')), tension:.25},
+    {label:'Act. Price', data:kKeys.map(k=>avgFor(k,'actPrice')), tension:.25},
+    {label:'Act. Starch %', data:kKeys.map(k=>{ const v=avgFor(k,'actStarch'); return v==null ? null : v*100; }), tension:.25}
+  ]}, options: chartDefaults() });
+
+  const vt = groupSum(records, r=>r.vendorType, r=>r.volumeMt).sort((a,b)=>b.value-a.value);
+  makeChart('chartVendorType', { type:'doughnut', data:{ labels:vt.map(x=>x.key), datasets:[{label:'Volume MT', data:vt.map(x=>x.value)}] }, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}}} });
+
+  const prov = groupSum(records, r=>r.province, r=>r.volumeMt).sort((a,b)=>b.value-a.value).slice(0,10).reverse();
+  makeChart('chartTopProvince', { type:'bar', data:{ labels:prov.map(x=>x.key), datasets:[{label:'Volume MT', data:prov.map(x=>x.value), borderRadius:8}] }, options:{...chartDefaults(), indexAxis:'y'} });
+
+  const vendors = groupSum(records, r=>r.vendor, r=>r.volumeMt).sort((a,b)=>b.value-a.value).slice(0,15).reverse();
+  makeChart('chartTopVendor', { type:'bar', data:{ labels:vendors.map(x=>x.key), datasets:[{label:'Volume MT', data:vendors.map(x=>x.value), borderRadius:8}] }, options:{...chartDefaults(), indexAxis:'y'} });
+}
+function renderSourcing(records){
+  const volRows = DATA.sourcing.volumes.filter(r => (!state.plant || String(r.plant)===String(state.plant)) && (!state.year || String(r.year)===String(state.year)) && (!state.month || String(r.month)===String(state.month)));
+  const keys = uniq(volRows.map(r=>`${r.year}-${String(r.monthNo).padStart(2,'0')}`)).sort();
+  function sumField(key, field){ return volRows.filter(r=>`${r.year}-${String(r.monthNo).padStart(2,'0')}`===key).reduce((a,r)=>a+safeNumber(r[field]),0); }
+  makeChart('chartVolumeSource', { type:'bar', data:{ labels:keys.map(k=>monthLabel(k.slice(0,4), Number(k.slice(5,7)))), datasets:[
+    {label:'Broker volume', data:keys.map(k=>sumField(k,'brokerVolume')), borderRadius:6},
+    {label:'Farmer volume', data:keys.map(k=>sumField(k,'farmerVolume')), borderRadius:6},
+    {label:'Regular roots', data:keys.map(k=>sumField(k,'regularVolume')), borderRadius:6}
+  ]}, options: chartDefaults() });
+  const topDistrict = groupSum(records, r=>r.district, r=>r.volumeMt).sort((a,b)=>b.value-a.value).slice(0,5);
+  const topRoot = groupSum(records, r=>r.rootsType, r=>r.volumeMt).sort((a,b)=>b.value-a.value);
+  const byPlant = groupSum(records, r=>r.plant, r=>r.volumeMt).sort((a,b)=>b.value-a.value);
+  $('areaInsights').innerHTML = [
+    `<div class="p-3 rounded-xl bg-slate-50 border"><p class="font-semibold text-ink mb-1">Plant contribution</p>${byPlant.map(x=>`<div class="flex justify-between"><span>${escapeHtml(x.key)}</span><b>${fmt(x.value)} MT</b></div>`).join('')}</div>`,
+    `<div class="p-3 rounded-xl bg-slate-50 border"><p class="font-semibold text-ink mb-1">Top districts</p>${topDistrict.map(x=>`<div class="flex justify-between gap-2"><span>${escapeHtml(x.key)}</span><b>${fmt(x.value)} MT</b></div>`).join('')}</div>`,
+    `<div class="p-3 rounded-xl bg-slate-50 border"><p class="font-semibold text-ink mb-1">Root type</p>${topRoot.map(x=>`<div class="flex justify-between"><span>${escapeHtml(x.key)}</span><b>${fmt(x.value)} MT</b></div>`).join('')}</div>`
+  ].join('');
+}
+function renderDetailTable(records){
+  const sorted = [...records].sort((a,b)=>safeNumber(b.volumeMt)-safeNumber(a.volumeMt));
+  const maxPage = Math.max(0, Math.ceil(sorted.length/pageSize)-1);
+  detailPage = Math.min(detailPage, maxPage);
+  const slice = sorted.slice(detailPage*pageSize, (detailPage+1)*pageSize);
+  $('detailTableInfo').textContent = `Showing ${fmt(detailPage*pageSize+1)}-${fmt(detailPage*pageSize+slice.length)} of ${fmt(sorted.length)} rows`;
+  $('detailBody').innerHTML = slice.map(r => `<tr class="border-t hover:bg-slate-50"><td class="p-3">${escapeHtml(r.plant)}</td><td class="p-3">${escapeHtml(r.year)}</td><td class="p-3">${escapeHtml(r.month)}</td><td class="p-3">${escapeHtml(r.vendor)}</td><td class="p-3">${escapeHtml(r.vendorType)}</td><td class="p-3">${escapeHtml(r.province)}</td><td class="p-3">${escapeHtml(r.district)}</td><td class="p-3 text-right font-medium">${fmt(safeNumber(r.volumeMt),2)}</td><td class="p-3 text-right">${pctFromFraction(safeNumber(r.starchContent))}</td><td class="p-3 text-right">${fmt(safeNumber(r.price),2)}</td><td class="p-3 text-right">${fmt(safeNumber(r.ppds),2)}</td><td class="p-3 text-right">${fmt(safeNumber(r.amount),0)}</td></tr>`).join('') || `<tr><td colspan="12" class="p-8 text-center text-slate-400">No data</td></tr>`;
+}
+
+function marketSeriesData(){
+  const m=DATA.market; const series=$('marketSeries').value; let rows=[], label='', valueKey='', xKey='date';
+  if(series==='starchDomestic'){ rows=m.starchPrice; label='Domestic price THB/kg'; valueKey='domesticPrice'; }
+  if(series==='starchFobBangkok'){ rows=m.starchPrice; label='FOB Bangkok USD/MT'; valueKey='fobBangkok'; }
+  if(series==='chipThb'){ rows=m.chipPrice; label='Tapioca chip THB/kg'; valueKey='thbKg'; }
+  if(series==='chipSrichang'){ rows=m.chipPrice; label='TH @ Srichang USD/MT'; valueKey='thSrichangUsdMt'; }
+  if(series==='ethanol'){ rows=m.ethanolPrice; label='Ethanol THB/Liter'; valueKey='thbLiter'; xKey='month'; }
+  if(series==='dryPulpDaily'){ rows=m.dryPulpDaily; label='Dry pulp daily average'; valueKey='average'; }
+  if(series==='dryPulpMonthly'){ rows=m.dryPulpMonthly; label='Dry pulp monthly price'; valueKey='price'; xKey='month'; }
+  rows = rows.filter(r=>r[xKey] && Number.isFinite(r[valueKey]));
+  const lim = Number($('marketLimit').value || 120);
+  if(rows.length > lim) rows = rows.slice(rows.length-lim);
+  return {rows,label,valueKey,xKey};
+}
+function renderMarketCharts(){
+  if(!DATA) return;
+  const s = marketSeriesData();
+  makeChart('chartMarket', { type:'line', data:{ labels:s.rows.map(r=>r[s.xKey]), datasets:[{label:s.label, data:s.rows.map(r=>r[s.valueKey]), tension:.25}]}, options: chartDefaults() });
+  const prod = DATA.market.production.filter(r=>Number.isFinite(r.productionTon));
+  makeChart('chartProduction', { type:'bar', data:{ labels:prod.map(r=>r.cropYear), datasets:[{label:'Production Ton', data:prod.map(r=>r.productionTon), borderRadius:8}, {label:'Yield Ton/Rai', data:prod.map(r=>r.yieldTonRai), type:'line', tension:.25}]}, options: chartDefaults() });
+  $('marketSummary').innerHTML = Object.entries(DATA.market).map(([k,v])=>`<div class="p-3 rounded-xl bg-slate-50 border"><p class="font-semibold text-ink">${escapeHtml(k)}</p><p class="text-2xl font-bold text-ingredion">${fmt(v.length)}</p><p class="text-xs text-slate-500">records</p></div>`).join('');
+}
+
+function initSheetExplorer(){
+  const wbs = sortMixed(uniq(DATA.workbookSheets.map(s=>s.workbook)));
+  setOptions('sheetWorkbook', wbs, wbs[0], 'Select workbook');
+  $('sheetWorkbook').value = wbs[0] || '';
+  updateSheetOptions();
+  ['sheetWorkbook','sheetName','sheetColLimit'].forEach(id => $(id).addEventListener('change', () => { if(id==='sheetWorkbook') updateSheetOptions(); renderSheetExplorer(); }));
+  $('sheetSearch').addEventListener('input', debounce(renderSheetExplorer, 180));
+  $('exportSheetBtn').addEventListener('click', exportCurrentSheet);
+}
+function updateSheetOptions(){
+  const wb = $('sheetWorkbook').value;
+  const sheets = DATA.workbookSheets.filter(s=>s.workbook===wb).map(s=>s.sheet);
+  setOptions('sheetName', sheets, sheets[0], 'Select sheet');
+  $('sheetName').value = sheets[0] || '';
+  renderSheetExplorer();
+}
+function currentSheet(){ return DATA.workbookSheets.find(s=>s.workbook===$('sheetWorkbook').value && s.sheet===$('sheetName').value); }
+function renderSheetExplorer(){
+  if(!DATA) return;
+  const sh = currentSheet(); if(!sh) return;
+  const query = $('sheetSearch').value.trim().toLowerCase();
+  const colLimit = Number($('sheetColLimit').value || 40);
+  let rows = sh.rows || [];
+  if(query) rows = rows.filter(r => r.some(v => String(v ?? '').toLowerCase().includes(query)));
+  $('sheetSummary').innerHTML = `<span class="pill green">${escapeHtml(sh.workbook)}</span><span class="pill blue">${escapeHtml(sh.sheet)}</span><span class="pill">Rows: ${fmt(sh.summary.rows)}</span><span class="pill">Columns: ${fmt(sh.summary.columns)}</span><span class="pill">Non-empty: ${fmt(sh.summary.nonEmptyCells)}</span><span class="pill orange">Showing: ${fmt(Math.min(rows.length, 500))}/${fmt(rows.length)} rows</span>`;
+  const maxCols = Math.min(colLimit, Math.max(...rows.slice(0,500).map(r=>r.length), 0));
+  const visible = rows.slice(0,500);
+  if(!visible.length){ $('sheetTable').innerHTML = '<tbody><tr><td class="p-8 text-center text-slate-400">No matching rows</td></tr></tbody>'; return; }
+  const header = visible[0];
+  const body = visible.slice(1);
+  $('sheetTable').innerHTML = `<thead><tr>${Array.from({length:maxCols}, (_,i)=>`<th class="p-2 text-left">${escapeHtml(header[i] ?? 'Col '+(i+1))}</th>`).join('')}</tr></thead><tbody>${body.map(r=>`<tr class="border-t hover:bg-slate-50">${Array.from({length:maxCols},(_,i)=>`<td class="p-2">${escapeHtml(r[i] ?? '')}</td>`).join('')}</tr>`).join('')}</tbody>`;
+}
+function exportCurrentSheet(){
+  const sh=currentSheet(); if(!sh) return;
+  downloadCSV(sh.rows, `${sh.workbook.replace(/\.xlsx$/,'')}_${sh.sheet}.csv`.replace(/[\\/:*?"<>|]/g,'_'));
+}
+
+function renderQuality(records){
+  const req = [['plant','Plant'],['year','Year'],['month','Month'],['vendor','Vendor'],['province','Province'],['district','District'],['volumeMt','Volume MT'],['starchContent','Starch content'],['price','Price'],['amount','Amount'],['ppds','PPDS']];
+  $('qualityFields').innerHTML = req.map(([key,label])=>{
+    const total = records.length || 1; const missing = records.filter(r => r[key] === null || r[key] === undefined || r[key] === '').length; const ok = total-missing; const p = ok/total*100;
+    return `<div><div class="flex justify-between text-xs mb-1"><span>${label}</span><b>${fmt(p,1)}%</b></div><div class="h-2 bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-ingredion" style="width:${p}%"></div></div><p class="text-xs text-slate-400 mt-1">OK ${fmt(ok)} / Missing ${fmt(missing)}</p></div>`;
+  }).join('');
+  $('qualitySheetBody').innerHTML = DATA.workbookSheets.map(s=>`<tr class="border-t"><td class="p-3">${escapeHtml(s.workbook)}</td><td class="p-3">${escapeHtml(s.sheet)}</td><td class="p-3 text-right">${fmt(s.summary.rows)}</td><td class="p-3 text-right">${fmt(s.summary.columns)}</td><td class="p-3 text-right">${fmt(s.summary.nonEmptyCells)}</td></tr>`).join('');
+  $('dataNotes').innerHTML = [
+    'ไฟล์ SK/KSN มีข้อมูล transaction จากชีต RegRoot รวมกันเพื่อสร้าง KPI และกราฟหลัก',
+    'ค่า Starch เฉลี่ยคำนวณแบบถ่วงน้ำหนักจาก Weigh starch / Volume kg',
+    'ค่า PPDS เฉลี่ยคำนวณแบบถ่วงน้ำหนักจาก Amount / Weigh starch',
+    'Market situation บางชีตมีโครงสร้างกว้างมาก จึงแสดงใน Sheet Explorer และ export CSV ได้ครบตามชีต',
+    'Dashboard นี้เป็น static web app สำหรับ GitHub Pages ไม่ต้องมี backend'
+  ].map(x=>`<li>${escapeHtml(x)}</li>`).join('');
+}
+
+loadData();
+</script>
 </body>
 </html>
