@@ -1,0 +1,34 @@
+{
+  "generatedAt": "2026-06-11T16:34:36.872054+00:00",
+  "checks": {
+    "ppds": {
+      "totalRows": 14875,
+      "completeRows": 14768,
+      "missingRows": 107,
+      "zeroRows": 8,
+      "criticalMissingRows": 0,
+      "completePercent": 99.28,
+      "bySource": [
+        {
+          "plant": "Sikhiu",
+          "workbook": "SK Root Sourcing report App.xlsx",
+          "sheet": "RegRoot.SK",
+          "missingRows": 106
+        },
+        {
+          "plant": "Kalasin",
+          "workbook": "KSN Root Sourcing report App.xlsx",
+          "sheet": "RegRoot.KSN",
+          "missingRows": 1
+        }
+      ]
+    },
+    "counts": {
+      "sourcingRecords": 14875,
+      "kpiRows": 96,
+      "volumeRows": 96,
+      "nameRows": 1694,
+      "workbookSheets": 75
+    }
+  }
+}

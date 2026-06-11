@@ -1,0 +1,636 @@
+{
+  "project": "Root Sourcing & Market Situation Dashboard",
+  "generatedAt": "2026-06-11T16:34:35.431786+00:00",
+  "dashboardEntry": "index.html",
+  "mainDataFile": "data/dashboard_data.json",
+  "qualityReport": "data/quality_report.json",
+  "sourceExcelFolder": "data/source_excel/",
+  "csvFolder": "data/csv/",
+  "counts": {
+    "sourcingRecords": 14875,
+    "kpiRows": 96,
+    "volumeRows": 96,
+    "nameRows": 1694,
+    "workbookSheets": 75
+  },
+  "ppdsQuality": {
+    "totalRows": 14875,
+    "completeRows": 14768,
+    "missingRows": 107,
+    "zeroRows": 8,
+    "criticalMissingRows": 0,
+    "completePercent": 99.28,
+    "bySource": [
+      {
+        "plant": "Sikhiu",
+        "workbook": "SK Root Sourcing report App.xlsx",
+        "sheet": "RegRoot.SK",
+        "missingRows": 106
+      },
+      {
+        "plant": "Kalasin",
+        "workbook": "KSN Root Sourcing report App.xlsx",
+        "sheet": "RegRoot.KSN",
+        "missingRows": 1
+      }
+    ],
+    "byMonth": [
+      {
+        "plant": "Sikhiu",
+        "year": 2024,
+        "month": "Jun",
+        "missingRows": 16
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2025,
+        "month": "May",
+        "missingRows": 12
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2023,
+        "month": "Oct",
+        "missingRows": 8
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2024,
+        "month": "May",
+        "missingRows": 8
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2024,
+        "month": "Jul",
+        "missingRows": 8
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2025,
+        "month": "Jun",
+        "missingRows": 7
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2023,
+        "month": "Jun",
+        "missingRows": 6
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2024,
+        "month": "Oct",
+        "missingRows": 4
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2025,
+        "month": "Mar",
+        "missingRows": 4
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2023,
+        "month": "May",
+        "missingRows": 3
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2024,
+        "month": "Sep",
+        "missingRows": 3
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2024,
+        "month": "Dec",
+        "missingRows": 3
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2025,
+        "month": "Sep",
+        "missingRows": 3
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2025,
+        "month": "Oct",
+        "missingRows": 3
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2023,
+        "month": "Jan",
+        "missingRows": 2
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2026,
+        "month": "Feb",
+        "missingRows": 2
+      },
+      {
+        "plant": "Kalasin",
+        "year": 2024,
+        "month": "Jun",
+        "missingRows": 1
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2023,
+        "month": "Apr",
+        "missingRows": 1
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2023,
+        "month": "Jul",
+        "missingRows": 1
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2023,
+        "month": "Aug",
+        "missingRows": 1
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2023,
+        "month": "Sep",
+        "missingRows": 1
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2023,
+        "month": "Nov",
+        "missingRows": 1
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2023,
+        "month": "Dec",
+        "missingRows": 1
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2024,
+        "month": "Apr",
+        "missingRows": 1
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2024,
+        "month": "Aug",
+        "missingRows": 1
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2024,
+        "month": "Nov",
+        "missingRows": 1
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2025,
+        "month": "Jan",
+        "missingRows": 1
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2025,
+        "month": "Feb",
+        "missingRows": 1
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2025,
+        "month": "Jul",
+        "missingRows": 1
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2025,
+        "month": "Aug",
+        "missingRows": 1
+      },
+      {
+        "plant": "Sikhiu",
+        "year": 2026,
+        "month": "Mar",
+        "missingRows": 1
+      }
+    ]
+  },
+  "files": [
+    {
+      "path": "data/critical_missing_ppds_records.csv",
+      "sizeBytes": 5
+    },
+    {
+      "path": "data/csv/by_sheet/KSN_Root_Sourcing_report_App.xlsx/Month.KSN.csv",
+      "sizeBytes": 100
+    },
+    {
+      "path": "data/csv/by_sheet/KSN_Root_Sourcing_report_App.xlsx/Name.KSN.csv",
+      "sizeBytes": 84987
+    },
+    {
+      "path": "data/csv/by_sheet/KSN_Root_Sourcing_report_App.xlsx/RawKPI.KSN.csv",
+      "sizeBytes": 8302
+    },
+    {
+      "path": "data/csv/by_sheet/KSN_Root_Sourcing_report_App.xlsx/RegRoot.KSN.csv",
+      "sizeBytes": 1436492
+    },
+    {
+      "path": "data/csv/by_sheet/KSN_Root_Sourcing_report_App.xlsx/Volume.KSN.csv",
+      "sizeBytes": 1636
+    },
+    {
+      "path": "data/csv/by_sheet/KSN_Root_Sourcing_report_App.xlsx/Year.KSN.csv",
+      "sizeBytes": 44
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/Dry_Pulp_Daily_price_1.csv",
+      "sizeBytes": 14525
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/Dry_Pulp_Monthly_price_1.csv",
+      "sizeBytes": 517
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/Ethanol_Price_1.csv",
+      "sizeBytes": 1648
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Apr_2026_(2).csv",
+      "sizeBytes": 1580
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Apr_2026_Rev1-2.04.26.csv",
+      "sizeBytes": 1757
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Apr_2026___26.03.206.csv",
+      "sizeBytes": 1747
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Aug_2026_(2).csv",
+      "sizeBytes": 1574
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Aug_2026_02.04.26.csv",
+      "sizeBytes": 1575
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Dec_2026_(2).csv",
+      "sizeBytes": 1600
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Dec_2026__02.04.26.csv",
+      "sizeBytes": 1603
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Jul_2026_(2).csv",
+      "sizeBytes": 1577
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Jul_2026_02.04.26.csv",
+      "sizeBytes": 1579
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Jun_2026_(2).csv",
+      "sizeBytes": 1567
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Jun_2026_02.04.26.csv",
+      "sizeBytes": 1585
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Mar_2026_(2).csv",
+      "sizeBytes": 1654
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Mar_2026___22.02.2026.csv",
+      "sizeBytes": 1902
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_May_2026Rev01_5.5.206.csv",
+      "sizeBytes": 1868
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_May_2026_(2).csv",
+      "sizeBytes": 1591
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_May_2026_02.04.26.csv",
+      "sizeBytes": 1577
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_May_2026_24.04.26.csv",
+      "sizeBytes": 1879
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Nov_2026_(2).csv",
+      "sizeBytes": 1585
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Nov_2026__02.04.26.csv",
+      "sizeBytes": 1594
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Oct_2026_(2).csv",
+      "sizeBytes": 1575
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Oct_2026_02.04.26.csv",
+      "sizeBytes": 1577
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Sep_2026_(2).csv",
+      "sizeBytes": 1591
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/KSN_MAP_-_Sep_2026__02.04.26.csv",
+      "sizeBytes": 1589
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/KSN_ST+Price+PPDS+Farmer_Origi.csv",
+      "sizeBytes": 8611
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/KSN_ST+Price+PPDS_LV02.04.2026.csv",
+      "sizeBytes": 8761
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/LE02026_cost_LV11022026_Origi.csv",
+      "sizeBytes": 3510
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/LV02.04.2026_cost+_Act..csv",
+      "sizeBytes": 3881
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/LV02.04.2026_cost_Origi.csv",
+      "sizeBytes": 3819
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/Planner_1.4.2026.csv",
+      "sizeBytes": 2971
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/Planner_29.4.2026.csv",
+      "sizeBytes": 2951
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-Aug_2026___26.03.26.csv",
+      "sizeBytes": 1372
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-Dec_2026___26.03.26.csv",
+      "sizeBytes": 1331
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-July_2026___26.03.26.csv",
+      "sizeBytes": 1342
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-June_2026___26.03.2026.csv",
+      "sizeBytes": 1347
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-Nov_2026___26.03.26.csv",
+      "sizeBytes": 1343
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-Oct_2026___26.03.26.csv",
+      "sizeBytes": 1374
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-Sep_2026___26.03.26.csv",
+      "sizeBytes": 1375
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_Apr_2026_(2).csv",
+      "sizeBytes": 1601
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_Apr_2026___26.03.2026.csv",
+      "sizeBytes": 1838
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_Aug_2026_(2).csv",
+      "sizeBytes": 1589
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_Dec_26_(2).csv",
+      "sizeBytes": 1592
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_Jul_2026_(2).csv",
+      "sizeBytes": 1564
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_Jun_2026_(2).csv",
+      "sizeBytes": 1565
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_Mar_2026_(2).csv",
+      "sizeBytes": 1674
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_Mar_2026__22.02.2026.csv",
+      "sizeBytes": 1793
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_May_2026Rev01_5.5.2026.csv",
+      "sizeBytes": 1776
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_May_2026_(2).csv",
+      "sizeBytes": 1571
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_May_2026___24.04.26.csv",
+      "sizeBytes": 1772
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_May_2026___26.03.2026.csv",
+      "sizeBytes": 1406
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_Nov_26_(2).csv",
+      "sizeBytes": 1619
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_Oct_26_(2).csv",
+      "sizeBytes": 1588
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/SK_MAP_-_Sep_26_(2).csv",
+      "sizeBytes": 1562
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/SK_ST+Price+PPDS+Farmer_Origi..csv",
+      "sizeBytes": 10299
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/SK_ST+Price+PPDS_LV02.04.2026.csv",
+      "sizeBytes": 11135
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/Summary_plan_11.02.26.csv",
+      "sizeBytes": 3043
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/Tapioca_Chip_Price_1.csv",
+      "sizeBytes": 2182
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/Tapioca_Production_1.csv",
+      "sizeBytes": 1104
+    },
+    {
+      "path": "data/csv/by_sheet/Market_situation.xlsx/Tapioca_Starch_Price_1.csv",
+      "sizeBytes": 16871
+    },
+    {
+      "path": "data/csv/by_sheet/SK_Root_Sourcing_report_App.xlsx/Month.SK.csv",
+      "sizeBytes": 100
+    },
+    {
+      "path": "data/csv/by_sheet/SK_Root_Sourcing_report_App.xlsx/Name.SK.csv",
+      "sizeBytes": 122114
+    },
+    {
+      "path": "data/csv/by_sheet/SK_Root_Sourcing_report_App.xlsx/RawKPI.SK.csv",
+      "sizeBytes": 7299
+    },
+    {
+      "path": "data/csv/by_sheet/SK_Root_Sourcing_report_App.xlsx/RegRoot.SK.csv",
+      "sizeBytes": 1459122
+    },
+    {
+      "path": "data/csv/by_sheet/SK_Root_Sourcing_report_App.xlsx/VolFarmerContri.SK.csv",
+      "sizeBytes": 1740
+    },
+    {
+      "path": "data/csv/by_sheet/SK_Root_Sourcing_report_App.xlsx/Year.SK.csv",
+      "sizeBytes": 44
+    },
+    {
+      "path": "data/csv/by_sheet/ST_PPDS_Price_template.xlsx/KSN_ST+Price+PPDS__template.csv",
+      "sizeBytes": 658
+    },
+    {
+      "path": "data/csv/by_sheet/ST_PPDS_Price_template.xlsx/SK_ST+Price+PPDS__template.csv",
+      "sizeBytes": 610
+    },
+    {
+      "path": "data/csv/kpi_monthly_all.csv",
+      "sizeBytes": 19281
+    },
+    {
+      "path": "data/csv/ksn_kpi_monthly.csv",
+      "sizeBytes": 10206
+    },
+    {
+      "path": "data/csv/ksn_regroot.csv",
+      "sizeBytes": 1845756
+    },
+    {
+      "path": "data/csv/ksn_volume_contribution.csv",
+      "sizeBytes": 4290
+    },
+    {
+      "path": "data/csv/market_chipPrice.csv",
+      "sizeBytes": 2242
+    },
+    {
+      "path": "data/csv/market_dryPulpDaily.csv",
+      "sizeBytes": 14473
+    },
+    {
+      "path": "data/csv/market_dryPulpMonthly.csv",
+      "sizeBytes": 506
+    },
+    {
+      "path": "data/csv/market_ethanolPrice.csv",
+      "sizeBytes": 1092
+    },
+    {
+      "path": "data/csv/market_production.csv",
+      "sizeBytes": 721
+    },
+    {
+      "path": "data/csv/market_starchPrice.csv",
+      "sizeBytes": 11232
+    },
+    {
+      "path": "data/csv/sheet_index.csv",
+      "sizeBytes": 9584
+    },
+    {
+      "path": "data/csv/sk_kpi_monthly.csv",
+      "sizeBytes": 9308
+    },
+    {
+      "path": "data/csv/sk_regroot.csv",
+      "sizeBytes": 1863313
+    },
+    {
+      "path": "data/csv/sk_volume_contribution.csv",
+      "sizeBytes": 4682
+    },
+    {
+      "path": "data/csv/sourcing_records_all.csv",
+      "sizeBytes": 3708917
+    },
+    {
+      "path": "data/csv/vendor_master_all.csv",
+      "sizeBytes": 219604
+    },
+    {
+      "path": "data/csv/volume_contribution_all.csv",
+      "sizeBytes": 8888
+    },
+    {
+      "path": "data/dashboard_data.json",
+      "sizeBytes": 10784540
+    },
+    {
+      "path": "data/manifest.json",
+      "sizeBytes": 16119
+    },
+    {
+      "path": "data/ppds_missing_records.csv",
+      "sizeBytes": 22159
+    },
+    {
+      "path": "data/ppds_zero_records.csv",
+      "sizeBytes": 1839
+    },
+    {
+      "path": "data/quality_report.json",
+      "sizeBytes": 4912
+    },
+    {
+      "path": "data/source_excel/KSN Root Sourcing report App.xlsx",
+      "sizeBytes": 974706
+    },
+    {
+      "path": "data/source_excel/Market situation.xlsx",
+      "sizeBytes": 2449262
+    },
+    {
+      "path": "data/source_excel/SK Root Sourcing report App.xlsx",
+      "sizeBytes": 991211
+    },
+    {
+      "path": "data/source_excel/ST_PPDS_Price template.xlsx",
+      "sizeBytes": 513037
+    }
+  ]
+}
